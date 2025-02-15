@@ -1,5 +1,6 @@
 package com.flab.ecommerce.config;
 
+import com.flab.ecommerce.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,21 +27,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return new InMemoryUserDetailsManager(
-                User.withUsername("user123@example.com")
-                        .password(passwordEncoder().encode("user123!"))
-                        .roles("USER")
-                        .build()
-        );
+    public UserDetailsService userDetailsService(CustomUserDetailsService customUserDetailsService) {
+        return customUserDetailsService;
     }
 
     @Bean
     public AuthenticationManager authenticationManager(UserDetailsService userDetailsService) {
-        return new ProviderManager(List.of(new DaoAuthenticationProvider() {{
-            setUserDetailsService(userDetailsService);
-            setPasswordEncoder(passwordEncoder());
-        }}));
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+
+        return new ProviderManager(List.of(provider));
     }
 
     @Bean

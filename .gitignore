@@ -52,4 +52,8 @@ log/
 .DS_Store
 ._.DS_Store
 **/.DS_Store
+<<<<<<< HEAD
 **/._.DS_Store
+=======
+**/._.DS_Store
+>>>>>>> 43fc7d7 (Refactor: 회원가입 메서드명 수정)

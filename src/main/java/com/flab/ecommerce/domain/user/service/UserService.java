@@ -17,7 +17,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserResponseDTO save(UserRequestDTO requestDTO) {
-        if(userRepository.existsByEmail(requestDTO.getEmail())) {
+        if (userRepository.existsByEmail(requestDTO.getEmail())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
 
@@ -34,4 +34,11 @@ public class UserService {
     }
 
 
+    public UserResponseDTO getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+        return new UserResponseDTO((user));
+    }
+
 }
+

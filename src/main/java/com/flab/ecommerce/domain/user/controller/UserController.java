@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -19,6 +21,13 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> save(@Valid @RequestBody UserRequestDTO requestDTO) {
         UserResponseDTO responseDTO = userService.save(requestDTO);
         return ResponseEntity.ok(responseDTO);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> findMyInfo(Principal principal) {
+        String email = principal.getName();
+        UserResponseDTO user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
     }
 
 }

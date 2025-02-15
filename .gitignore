@@ -47,3 +47,9 @@ src/main/resources/application-*.yml
 *.log
 logs/
 log/
+
+### DS_Store ###
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store

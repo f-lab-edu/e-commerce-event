@@ -20,23 +20,30 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> save(@Valid @RequestBody UserCreateRequestDTO requestDTO) {
-        UserResponseDTO responseDTO = userService.save(requestDTO);
+    public ResponseEntity<UserResponseDTO> registerUser(@Valid @RequestBody UserCreateRequestDTO requestDTO) {
+        UserResponseDTO responseDTO = userService.registerUser(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> findMyInfo(Principal principal) {
         String email = principal.getName();
-        UserResponseDTO user = userService.getUserByEmail(email);
+        UserResponseDTO user = userService.findMyInfo(email);
         return ResponseEntity.ok(user);
     }
 
     @PutMapping("/me")
     public ResponseEntity<UserResponseDTO> updateMyInfo(@Valid @RequestBody UserUpdateRequestDTO requestDTO, Principal principal) {
         String email = principal.getName();
-        UserResponseDTO user = userService.updateUserByEmail(email, requestDTO);
+        UserResponseDTO user = userService.updateMyInfo(email, requestDTO);
         return ResponseEntity.ok(user);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(Principal principal) {
+        String email = principal.getName();
+        userService.deactivateUser(email);
+        return ResponseEntity.noContent().build();
     }
 
 }

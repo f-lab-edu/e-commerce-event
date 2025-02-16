@@ -32,4 +32,8 @@ public class UserEntity {
 
     @Column(nullable = false)
     private boolean isActive = true;
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

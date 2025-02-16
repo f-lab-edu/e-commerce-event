@@ -19,7 +19,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserResponseDTO save(UserCreateRequestDTO requestDTO) {
+    public UserResponseDTO registerUser(UserCreateRequestDTO requestDTO) {
         if (userRepository.existsByEmail(requestDTO.getEmail())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
@@ -31,45 +31,45 @@ public class UserService {
                 .name(requestDTO.getName())
                 .password(encodedPassword)
                 .role(UserRole.USER)
+                .isActive(true)
                 .build();
         userRepository.save(user);
         return new UserResponseDTO(user);
     }
 
     @Transactional(readOnly = true)
-    public UserResponseDTO getUserByEmail(String email) {
+    public UserResponseDTO findMyInfo(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
         return new UserResponseDTO(user);
     }
 
     @Transactional
-    public UserResponseDTO updateUserByEmail(String email, UserUpdateRequestDTO requestDTO) {
+    public UserResponseDTO updateMyInfo(String email, UserUpdateRequestDTO requestDTO) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        boolean isChanged = false;
-
-        if (requestDTO.getName() != null
-                && !requestDTO.getName().isEmpty()
+        if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
                 && !requestDTO.getName().equals(user.getName())) {
             user.setName(requestDTO.getName());
-            isChanged = true;
         }
 
         if (requestDTO.getPassword() != null && !requestDTO.getPassword().isEmpty()) {
             if (!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
                 String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
                 user.setPassword(encodedPassword);
-                isChanged = true;
             }
         }
 
-        if (isChanged) {
-            userRepository.save(user);
-        }
-
         return new UserResponseDTO(user);
+    }
+
+
+    @Transactional
+    public void deactivateUser(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+        user.deactivate();
     }
 }
 

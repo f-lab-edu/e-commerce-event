@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -45,5 +46,22 @@ public class UserController {
         userService.deactivateUser(email);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponseDTO>> findAllUsers(Principal principal) {
+        String adminEmail = principal.getName();
+        List<UserResponseDTO> users = userService.findAllUsers(adminEmail);
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> findUserById(@PathVariable Long id, Principal principal) {
+        String adminEmail = principal.getName();
+        UserResponseDTO user = userService.findUserById(id, adminEmail);
+        return ResponseEntity.ok(user);
+    }
+
+
+
 
 }

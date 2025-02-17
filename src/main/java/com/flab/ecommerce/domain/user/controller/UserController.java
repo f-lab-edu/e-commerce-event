@@ -48,16 +48,14 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> findAllUsers(Principal principal) {
-        String adminEmail = principal.getName();
-        List<UserResponseDTO> users = userService.findAllUsers(adminEmail);
+    public ResponseEntity<List<UserResponseDTO>> findAllUsers() {
+        List<UserResponseDTO> users = userService.findAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findUserById(@PathVariable Long id, Principal principal) {
-        String adminEmail = principal.getName();
-        UserResponseDTO user = userService.findUserById(id, adminEmail);
+    public ResponseEntity<UserResponseDTO> findUserById(@PathVariable Long id) {
+        UserResponseDTO user = userService.findUserById(id);
         return ResponseEntity.ok(user);
     }
 

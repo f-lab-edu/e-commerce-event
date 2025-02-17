@@ -7,6 +7,7 @@ import com.flab.ecommerce.domain.user.entity.UserEntity;
 import com.flab.ecommerce.domain.user.enums.UserRole;
 import com.flab.ecommerce.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,12 +77,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAllUsers(String adminEmail) {
-        UserEntity admin = userRepository.findByEmail(adminEmail)
-                .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다."));
-        if (admin.getRole() != UserRole.ADMIN) {
-            throw new IllegalArgumentException("관리자만 유저 목록을 조회할 수 있습니다.");
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<UserResponseDTO> findAllUsers() {
         return userRepository.findAll()
                 .stream()
                 .map(UserResponseDTO::new)
@@ -89,13 +86,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponseDTO findUserById(Long id, String adminEmail) {
-        UserEntity admin = userRepository.findByEmail(adminEmail)
-                .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다."));
-        if (admin.getRole() != UserRole.ADMIN) {
-            throw new IllegalArgumentException("관리자만 유저를 조회할 수 있습니다.");
-        }
-
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponseDTO findUserById(Long id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
         return new UserResponseDTO(user);

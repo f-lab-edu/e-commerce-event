@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,12 +57,13 @@ public class UserService {
             user.setName(requestDTO.getName());
         }
 
-        if (requestDTO.getPassword() != null && !requestDTO.getPassword().isEmpty()) {
-            if (!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
+        if (requestDTO.getPassword() != null
+                && !requestDTO.getPassword().isEmpty()
+                && !passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
+
                 String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
                 user.setPassword(encodedPassword);
             }
-        }
 
         return new UserResponseDTO(user);
     }
@@ -82,7 +82,7 @@ public class UserService {
         return userRepository.findAll()
                 .stream()
                 .map(UserResponseDTO::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)

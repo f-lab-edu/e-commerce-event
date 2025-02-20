@@ -1,6 +1,6 @@
-package com.flab.ecommerce.config;
+package com.flab.ecommerce.global.security;
 
-import com.flab.ecommerce.security.CustomUserDetailsService;
+import com.flab.ecommerce.global.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

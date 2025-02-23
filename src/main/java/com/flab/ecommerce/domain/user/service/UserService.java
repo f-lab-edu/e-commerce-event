@@ -5,6 +5,8 @@ import com.flab.ecommerce.domain.user.dto.UserResponseDTO;
 import com.flab.ecommerce.domain.user.dto.UserUpdateRequestDTO;
 import com.flab.ecommerce.domain.user.entity.UserEntity;
 import com.flab.ecommerce.domain.user.enums.UserRole;
+import com.flab.ecommerce.domain.user.exception.EmailAlreadyExistsException;
+import com.flab.ecommerce.domain.user.exception.UserNotFoundException;
 import com.flab.ecommerce.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +25,7 @@ public class UserService {
     @Transactional
     public UserResponseDTO registerUser(UserCreateRequestDTO requestDTO) {
         if (userRepository.existsByEmail(requestDTO.getEmail())) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            throw new EmailAlreadyExistsException();
         }
 
         String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
@@ -42,14 +44,14 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponseDTO findMyInfo(String email) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
         return new UserResponseDTO(user);
     }
 
     @Transactional
     public UserResponseDTO updateMyInfo(String email, UserUpdateRequestDTO requestDTO) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
 
         if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
                 && !requestDTO.getName().equals(user.getName())) {
@@ -71,7 +73,7 @@ public class UserService {
     @Transactional
     public void deactivateUser(String email) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
         user.deactivate();
     }
 
@@ -84,14 +86,14 @@ public class UserService {
 
     public UserResponseDTO findUserById(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
         return new UserResponseDTO(user);
     }
 
     @Transactional
     public UserResponseDTO updateUserById(Long id, UserUpdateRequestDTO requestDTO) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
 
         if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
                 && !requestDTO.getName().equals(user.getName())) {
@@ -112,14 +114,14 @@ public class UserService {
     @Transactional
     public void deactivateUserById(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
         user.deactivate();
     }
 
     @Transactional
     public void activateUserById(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(UserNotFoundException::new);
         user.activate();
     }
 

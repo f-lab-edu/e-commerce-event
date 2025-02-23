@@ -1,12 +1,15 @@
 package com.flab.ecommerce.domain.product.service;
 
+import com.flab.ecommerce.domain.product.dto.ProductCreateRequestDTO;
 import com.flab.ecommerce.domain.product.dto.ProductDetailResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
+import com.flab.ecommerce.domain.product.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.repository.CategoryRepository;
 import com.flab.ecommerce.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,5 +30,23 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다. id=" + id));
         return new ProductDetailResponseDTO(product);
+    }
+
+    @Transactional
+    public ProductDetailResponseDTO createProduct(ProductCreateRequestDTO requestDTO) {
+        Category category = categoryRepository.findById(requestDTO.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        Product product = Product.builder()
+                .name(requestDTO.getName())
+                .description(requestDTO.getDescription())
+                .price(requestDTO.getPrice())
+                .stockQuantity(requestDTO.getStockQuantity())
+                .imageUrl(requestDTO.getImageUrl())
+                .category(category)
+                .build();
+
+        Product savedProduct = productRepository.save(product);
+        return new ProductDetailResponseDTO(savedProduct);
     }
 }

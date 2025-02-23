@@ -1,10 +1,13 @@
 package com.flab.ecommerce.domain.product.dto;
 
+<<<<<<< HEAD
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+=======
+>>>>>>> 280c387 (Feat: 상품 등록 API 추가)
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +15,7 @@ import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor
+<<<<<<< HEAD
 @AllArgsConstructor
 @Builder
 public class ProductCreateRequestDTO {
@@ -34,4 +38,15 @@ public class ProductCreateRequestDTO {
 
     private String imageUrl;
 
+=======
+public class ProductCreateRequestDTO {
+
+    private String name;
+    private String description;
+    private BigDecimal price;
+    private int stockQuantity;
+    private String imageUrl;
+    private Long categoryId;
+
+>>>>>>> 280c387 (Feat: 상품 등록 API 추가)
 }

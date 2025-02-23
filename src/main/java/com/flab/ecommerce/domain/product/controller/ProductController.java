@@ -34,10 +34,13 @@ public class ProductController {
         return ResponseEntity.ok(productService.createProduct(requestDTO));
     }
 
+<<<<<<< HEAD
     @PatchMapping("{id}")
     public ResponseEntity<ProductDetailResponseDTO> updateProduct(@PathVariable long id, @RequestBody ProductUpdateRequestDTO requestDTO) {
         ProductDetailResponseDTO updatedProduct = productService.updateProduct(id, requestDTO);
         return ResponseEntity.ok(updatedProduct);
     }
 
+=======
+>>>>>>> 280c387 (Feat: 상품 등록 API 추가)
 }

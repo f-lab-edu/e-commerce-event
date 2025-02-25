@@ -41,7 +41,6 @@ public class UserService {
         return new UserResponseDTO(user);
     }
 
-    @Transactional(readOnly = true)
     public UserResponseDTO findMyInfo(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFoundException::new);

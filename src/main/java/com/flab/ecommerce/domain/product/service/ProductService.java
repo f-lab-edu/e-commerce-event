@@ -4,9 +4,13 @@ import com.flab.ecommerce.domain.product.dto.ProductCreateRequestDTO;
 import com.flab.ecommerce.domain.product.dto.ProductDetailResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 =======
 >>>>>>> 280c387 (Feat: 상품 등록 API 추가)
+=======
+import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
+>>>>>>> 4d249de (Feat: 상품 수정 API 추가)
 import com.flab.ecommerce.domain.product.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.repository.CategoryRepository;
@@ -54,6 +58,9 @@ public class ProductService {
         return new ProductDetailResponseDTO(savedProduct);
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 4d249de (Feat: 상품 수정 API 추가)
 
     @Transactional
     public ProductDetailResponseDTO updateProduct(long id, ProductUpdateRequestDTO requestDTO) {
@@ -68,6 +75,9 @@ public class ProductService {
         product.update(requestDTO, category);
         return new ProductDetailResponseDTO(product);
     }
+<<<<<<< HEAD
 =======
 >>>>>>> 280c387 (Feat: 상품 등록 API 추가)
+=======
+>>>>>>> 4d249de (Feat: 상품 수정 API 추가)
 }

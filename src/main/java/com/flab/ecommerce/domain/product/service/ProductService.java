@@ -3,6 +3,7 @@ package com.flab.ecommerce.domain.product.service;
 import com.flab.ecommerce.domain.product.dto.ProductCreateRequestDTO;
 import com.flab.ecommerce.domain.product.dto.ProductDetailResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
+import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.product.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.repository.CategoryRepository;
@@ -48,5 +49,19 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
         return new ProductDetailResponseDTO(savedProduct);
+    }
+
+    @Transactional
+    public ProductDetailResponseDTO updateProduct(long id, ProductUpdateRequestDTO requestDTO) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다.."));
+
+        Category category = requestDTO.getCategoryId() == null
+                ? product.getCategory()
+                : categoryRepository.findById(requestDTO.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        product.update(requestDTO, category);
+        return new ProductDetailResponseDTO(product);
     }
 }

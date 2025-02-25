@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.product.entity;
 
+import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,5 +47,26 @@ public class Product {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public void update(ProductUpdateRequestDTO requestDTO, Category newCategory) {
+        if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()) {
+            this.name = requestDTO.getName();
+        }
+        if (requestDTO.getDescription() != null && !requestDTO.getDescription().isEmpty()) {
+            this.description = requestDTO.getDescription();
+        }
+        if (requestDTO.getPrice() != null) {
+            this.price = requestDTO.getPrice();
+        }
+        if (requestDTO.getStockQuantity() > 0) {
+            this.stockQuantity = requestDTO.getStockQuantity();
+        }
+        if (requestDTO.getImageUrl() != null && !requestDTO.getImageUrl().isEmpty()) {
+            this.imageUrl = requestDTO.getImageUrl();
+        }
+        if (newCategory != null) {
+            this.category = newCategory;
+        }
+    }
 
 }

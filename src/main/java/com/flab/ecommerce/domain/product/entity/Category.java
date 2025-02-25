@@ -1,6 +1,8 @@
 package com.flab.ecommerce.domain.product.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,6 +17,8 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @Getter
+@Builder
+@AllArgsConstructor
 public class Category {
 
     @Id
@@ -28,6 +32,7 @@ public class Category {
     private Category parentCategory;
 
     @OneToMany(mappedBy = "category")
+    @Builder.Default
     private List<Product> products = new ArrayList<>();
 
     @CreatedDate

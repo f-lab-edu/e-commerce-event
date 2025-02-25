@@ -4,6 +4,7 @@ package com.flab.ecommerce.domain.product.controller;
 import com.flab.ecommerce.domain.product.dto.ProductCreateRequestDTO;
 import com.flab.ecommerce.domain.product.dto.ProductDetailResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
+import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,12 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductDetailResponseDTO> createProduct(@RequestBody ProductCreateRequestDTO requestDTO) {
         return ResponseEntity.ok(productService.createProduct(requestDTO));
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<ProductDetailResponseDTO> updateProduct(@PathVariable long id, @RequestBody ProductUpdateRequestDTO requestDTO) {
+        ProductDetailResponseDTO updatedProduct = productService.updateProduct(id, requestDTO);
+        return ResponseEntity.ok(updatedProduct);
     }
 
 }

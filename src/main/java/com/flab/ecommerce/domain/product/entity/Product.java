@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.product.entity;
 
+import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

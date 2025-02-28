@@ -1,5 +1,6 @@
-package com.flab.ecommerce.domain.product.entity;
+package com.flab.ecommerce.domain.category.entity;
 
+import com.flab.ecommerce.domain.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

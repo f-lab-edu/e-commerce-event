@@ -4,11 +4,11 @@ import com.flab.ecommerce.domain.product.dto.ProductCreateRequestDTO;
 import com.flab.ecommerce.domain.product.dto.ProductDetailResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
-import com.flab.ecommerce.domain.product.entity.Category;
+import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.exception.CategoryNotFoundException;
 import com.flab.ecommerce.domain.product.exception.ProductNotFoundException;
-import com.flab.ecommerce.domain.product.repository.CategoryRepository;
+import com.flab.ecommerce.domain.category.repository.CategoryRepository;
 import com.flab.ecommerce.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -65,5 +65,13 @@ public class ProductService {
 
         product.update(requestDTO, category);
         return new ProductDetailResponseDTO(product);
+    }
+
+    @Transactional
+    public void deleteProduct(long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        productRepository.delete(product);
     }
 }

@@ -1,6 +1,6 @@
 package com.flab.ecommerce.domain.product.repository;
 
-import com.flab.ecommerce.domain.product.entity.Category;
+import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

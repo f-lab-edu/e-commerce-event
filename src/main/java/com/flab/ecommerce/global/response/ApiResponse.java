@@ -10,7 +10,6 @@ public class ApiResponse<T> {
     private final int status;
     private final String message;
     private final T data;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private final LocalDateTime timestamp;
 

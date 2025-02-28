@@ -6,13 +6,13 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -46,6 +46,14 @@ public class User {
 
     @Column(nullable = false)
     private boolean isActive = true;
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void changePassword(String password, PasswordEncoder passwordEncoder) {
+        this.password = passwordEncoder.encode(password);
+    }
 
     public void deactivate() {
         this.isActive = false;

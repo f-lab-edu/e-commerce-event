@@ -54,15 +54,13 @@ public class UserService {
 
         if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
                 && !requestDTO.getName().equals(user.getName())) {
-            user.setName(requestDTO.getName());
+            user.updateName(requestDTO.getName());
         }
 
         if (requestDTO.getPassword() != null
                 && !requestDTO.getPassword().isEmpty()
                 && !passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
-
-                String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
-                user.setPassword(encodedPassword);
+                user.changePassword(requestDTO.getPassword(), passwordEncoder);
             }
 
         return new UserResponseDTO(user);
@@ -96,15 +94,14 @@ public class UserService {
 
         if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
                 && !requestDTO.getName().equals(user.getName())) {
-            user.setName(requestDTO.getName());
+            user.updateName(requestDTO.getName());
         }
 
         if (requestDTO.getPassword() != null
                 && !requestDTO.getPassword().isEmpty()
                 && !passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
 
-            String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
-            user.setPassword(encodedPassword);
+            user.changePassword(requestDTO.getPassword(), passwordEncoder);
         }
 
         return new UserResponseDTO(user);

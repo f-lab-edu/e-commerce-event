@@ -14,7 +14,6 @@ public abstract class BaseException extends RuntimeException {
         this.status = status;
         this.errorCode = errorCode;
     }
-
     public ErrorResponse toErrorResponse() {
         return new ErrorResponse(status.value(), getMessage(), errorCode);
     }

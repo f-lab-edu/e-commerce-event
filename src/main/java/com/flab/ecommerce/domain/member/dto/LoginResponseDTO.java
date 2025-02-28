@@ -1,4 +1,4 @@
-package com.flab.ecommerce.domain.user.dto;
+package com.flab.ecommerce.domain.member.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;

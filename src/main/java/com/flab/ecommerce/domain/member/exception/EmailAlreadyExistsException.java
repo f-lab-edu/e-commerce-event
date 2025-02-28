@@ -1,4 +1,4 @@
-package com.flab.ecommerce.domain.user.exception;
+package com.flab.ecommerce.domain.member.exception;
 
 import com.flab.ecommerce.global.exception.BaseException;
 import org.springframework.http.HttpStatus;

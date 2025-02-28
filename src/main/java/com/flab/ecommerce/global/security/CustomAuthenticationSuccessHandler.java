@@ -1,7 +1,7 @@
 package com.flab.ecommerce.global.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flab.ecommerce.domain.user.dto.LoginResponseDTO;
+import com.flab.ecommerce.domain.member.dto.LoginResponseDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

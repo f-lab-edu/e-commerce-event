@@ -1,8 +1,9 @@
 package com.flab.ecommerce.global.security;
 
-import com.flab.ecommerce.domain.user.entity.User;
-import com.flab.ecommerce.domain.user.repository.UserRepository;
+import com.flab.ecommerce.domain.member.entity.Member;
+import com.flab.ecommerce.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,17 +13,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User userEntity = userRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다."));
 
-        return org.springframework.security.core.userdetails.User.withUsername(userEntity.getEmail())
-                .password(userEntity.getPassword())
-                .roles(userEntity.getRole().name())
-                .disabled(!userEntity.isActive())
+        return User.withUsername(member.getEmail())
+                .password(member.getPassword())
+                .roles(member.getRole().name())
+                .disabled(!member.isActive())
                 .build();
     }
 }

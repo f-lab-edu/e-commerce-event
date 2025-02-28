@@ -1,6 +1,6 @@
-package com.flab.ecommerce.domain.user.entity;
+package com.flab.ecommerce.domain.member.entity;
 
-import com.flab.ecommerce.domain.user.enums.UserRole;
+import com.flab.ecommerce.domain.member.enums.MemberRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -11,13 +11,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "members")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +34,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
+    private MemberRole role;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

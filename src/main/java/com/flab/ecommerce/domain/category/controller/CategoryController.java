@@ -6,7 +6,6 @@ import com.flab.ecommerce.domain.category.dto.CategoryUpdateRequestDTO;
 import com.flab.ecommerce.domain.category.service.CategoryService;
 import com.flab.ecommerce.global.response.ApiResponse;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

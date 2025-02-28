@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
+@Table(name = "categories")
 @Getter
 @Builder
 @AllArgsConstructor

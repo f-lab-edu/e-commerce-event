@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        LoginResponseDTO responseDTO = new LoginResponseDTO(200, "로그인 성공", "AUTHENTICATION_SUCCESS");
+        String email = ((User) authentication.getPrincipal()).getUsername();
+        LoginResponseDTO responseDTO = new LoginResponseDTO(200, "로그인 성공", email);
         response.getWriter().write(objectMapper.writeValueAsString(responseDTO));
     }
 }

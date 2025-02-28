@@ -1,4 +1,4 @@
-package com.flab.ecommerce.domain.product.exception;
+package com.flab.ecommerce.domain.category.exception;
 
 import com.flab.ecommerce.global.exception.BaseException;
 import org.springframework.http.HttpStatus;

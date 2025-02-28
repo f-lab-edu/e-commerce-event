@@ -3,7 +3,7 @@ package com.flab.ecommerce.domain.user.service;
 import com.flab.ecommerce.domain.user.dto.UserCreateRequestDTO;
 import com.flab.ecommerce.domain.user.dto.UserResponseDTO;
 import com.flab.ecommerce.domain.user.dto.UserUpdateRequestDTO;
-import com.flab.ecommerce.domain.user.entity.UserEntity;
+import com.flab.ecommerce.domain.user.entity.User;
 import com.flab.ecommerce.domain.user.enums.UserRole;
 import com.flab.ecommerce.domain.user.exception.EmailAlreadyExistsException;
 import com.flab.ecommerce.domain.user.exception.UserNotFoundException;
@@ -30,7 +30,7 @@ public class UserService {
 
         String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
 
-        UserEntity user = UserEntity.builder()
+        User user = User.builder()
                 .email(requestDTO.getEmail())
                 .name(requestDTO.getName())
                 .password(encodedPassword)
@@ -42,14 +42,14 @@ public class UserService {
     }
 
     public UserResponseDTO findMyInfo(String email) {
-        UserEntity user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFoundException::new);
         return new UserResponseDTO(user);
     }
 
     @Transactional
     public UserResponseDTO updateMyInfo(String email, UserUpdateRequestDTO requestDTO) {
-        UserEntity user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFoundException::new);
 
         if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
@@ -71,7 +71,7 @@ public class UserService {
 
     @Transactional
     public void deactivateUser(String email) {
-        UserEntity user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFoundException::new);
         user.deactivate();
     }
@@ -84,14 +84,14 @@ public class UserService {
     }
 
     public UserResponseDTO findUserById(Long id) {
-        UserEntity user = userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
         return new UserResponseDTO(user);
     }
 
     @Transactional
     public UserResponseDTO updateUserById(Long id, UserUpdateRequestDTO requestDTO) {
-        UserEntity user = userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
 
         if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
@@ -112,14 +112,14 @@ public class UserService {
 
     @Transactional
     public void deactivateUserById(Long id) {
-        UserEntity user = userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
         user.deactivate();
     }
 
     @Transactional
     public void activateUserById(Long id) {
-        UserEntity user = userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
         user.activate();
     }

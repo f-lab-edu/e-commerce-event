@@ -6,7 +6,7 @@ import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
-import com.flab.ecommerce.domain.product.exception.CategoryNotFoundException;
+import com.flab.ecommerce.domain.category.exception.CategoryNotFoundException;
 import com.flab.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.flab.ecommerce.domain.category.repository.CategoryRepository;
 import com.flab.ecommerce.domain.product.repository.ProductRepository;

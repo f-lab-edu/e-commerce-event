@@ -43,4 +43,23 @@ public class Category {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(nullable = false)
+    private boolean isActive = true;
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateParentCategory(Category parentCategory) {
+        this.parentCategory = parentCategory;
+    }
+
+    public void activate() {
+        this.isActive = true;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

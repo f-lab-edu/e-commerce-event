@@ -6,6 +6,8 @@ import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.product.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
+import com.flab.ecommerce.domain.product.exception.CategoryNotFoundException;
+import com.flab.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.flab.ecommerce.domain.product.repository.CategoryRepository;
 import com.flab.ecommerce.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,14 +31,14 @@ public class ProductService {
 
     public ProductDetailResponseDTO getProductById(long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다. id=" + id));
+                .orElseThrow(() -> new ProductNotFoundException(id));
         return new ProductDetailResponseDTO(product);
     }
 
     @Transactional
     public ProductDetailResponseDTO createProduct(ProductCreateRequestDTO requestDTO) {
         Category category = categoryRepository.findById(requestDTO.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+                .orElseThrow(CategoryNotFoundException::new);
 
         Product product = Product.builder()
                 .name(requestDTO.getName())
@@ -54,12 +56,12 @@ public class ProductService {
     @Transactional
     public ProductDetailResponseDTO updateProduct(long id, ProductUpdateRequestDTO requestDTO) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다.."));
+                .orElseThrow(() -> new ProductNotFoundException(id));
 
         Category category = requestDTO.getCategoryId() == null
                 ? product.getCategory()
                 : categoryRepository.findById(requestDTO.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+                .orElseThrow(CategoryNotFoundException::new);
 
         product.update(requestDTO, category);
         return new ProductDetailResponseDTO(product);

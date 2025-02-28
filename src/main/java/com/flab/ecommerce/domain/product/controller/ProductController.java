@@ -6,6 +6,7 @@ import com.flab.ecommerce.domain.product.dto.ProductDetailResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.product.service.ProductService;
+import com.flab.ecommerce.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,24 +21,27 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductListResponseDTO>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<ApiResponse<List<ProductListResponseDTO>>> getAllProducts() {
+        List<ProductListResponseDTO> products = productService.getAllProducts();
+        return ResponseEntity.ok(ApiResponse.success(products));
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<ProductDetailResponseDTO> getProductById(@PathVariable long id) {
-        return ResponseEntity.ok(productService.getProductById(id));
+    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> getProductById(@PathVariable long id) {
+        ProductDetailResponseDTO product = productService.getProductById(id);
+        return ResponseEntity.ok(ApiResponse.success(product));
     }
 
     @PostMapping
-    public ResponseEntity<ProductDetailResponseDTO> createProduct(@RequestBody ProductCreateRequestDTO requestDTO) {
-        return ResponseEntity.ok(productService.createProduct(requestDTO));
+    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> createProduct(@RequestBody ProductCreateRequestDTO requestDTO) {
+        ProductDetailResponseDTO product = productService.createProduct(requestDTO);
+        return ResponseEntity.ok(ApiResponse.success(product));
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<ProductDetailResponseDTO> updateProduct(@PathVariable long id, @RequestBody ProductUpdateRequestDTO requestDTO) {
-        ProductDetailResponseDTO updatedProduct = productService.updateProduct(id, requestDTO);
-        return ResponseEntity.ok(updatedProduct);
+    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> updateProduct(@PathVariable long id, @RequestBody ProductUpdateRequestDTO requestDTO) {
+        ProductDetailResponseDTO product = productService.updateProduct(id, requestDTO);
+        return ResponseEntity.ok(ApiResponse.success(product));
     }
 
 }

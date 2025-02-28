@@ -35,6 +35,13 @@ public class ProductService {
         return new ProductDetailResponseDTO(product);
     }
 
+    public List<ProductListResponseDTO> getProductsByCategory(long categoryId) {
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+        return products.stream()
+                .map(ProductListResponseDTO::new)
+                .toList();
+    }
+
     @Transactional
     public ProductDetailResponseDTO createProduct(ProductCreateRequestDTO requestDTO) {
         Category category = categoryRepository.findById(requestDTO.getCategoryId())

@@ -1,5 +1,6 @@
 package com.flab.ecommerce.global.exception;
 
+import com.flab.ecommerce.global.response.ErrorResponse;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -12,5 +13,9 @@ public abstract class BaseException extends RuntimeException {
         super(message);
         this.status = status;
         this.errorCode = errorCode;
+    }
+
+    public ErrorResponse toErrorResponse() {
+        return new ErrorResponse(status.value(), getMessage(), errorCode);
     }
 }

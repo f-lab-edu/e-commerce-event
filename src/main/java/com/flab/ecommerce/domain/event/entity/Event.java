@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.event.entity;
 
+import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import jakarta.persistence.*;
@@ -54,8 +55,23 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public void updateDescription(String description) {
-        this.description = description;
+    public void update(EventUpdateRequestDTO requestDTO) {
+        if(requestDTO.getName() != null) {
+            this.name = requestDTO.getName();
+        }
+
+        if (requestDTO.getDescription() != null) {
+            this.description = requestDTO.getDescription();
+        }
+
+        if (requestDTO.getStartDate() != null && requestDTO.getEndDate() != null) {
+            this.startDate = requestDTO.getStartDate();
+            this.endDate = requestDTO.getEndDate();
+        }
+
+        if (requestDTO.getType() != null) {
+            this.type = EventType.fromCode(requestDTO.getType());
+        }
     }
 
     public void changeStatue(EventStatus status) {

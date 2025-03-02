@@ -10,7 +10,7 @@ public class EventUpdateRequestDTO {
 
     private String name;
     private String description;
-    private String type;
+    private EventType type;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

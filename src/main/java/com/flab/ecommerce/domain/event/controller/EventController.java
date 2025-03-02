@@ -3,6 +3,7 @@ package com.flab.ecommerce.domain.event.controller;
 import com.flab.ecommerce.domain.event.dto.EventCreateRequestDTO;
 import com.flab.ecommerce.domain.event.dto.EventDetailResponseDTO;
 import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
+import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.service.EventService;
 import com.flab.ecommerce.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,4 +31,20 @@ public class EventController {
         EventDetailResponseDTO event = eventService.updateEvent(id, requestDTO);
         return ResponseEntity.ok(ApiResponse.success(event));
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<EventDetailResponseDTO>> changeEventStatus(@PathVariable long id, @RequestParam EventStatus status) {
+        EventDetailResponseDTO event = eventService.changeEventStatus(id, status);
+        return ResponseEntity.ok(ApiResponse.success(event));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> deleteEvent(@PathVariable long id) {
+        eventService.deleteEvent(id);
+        return ResponseEntity.ok(ApiResponse.success("이벤트 삭제가 완료 되었습니다."));
+    }
+
+
 }

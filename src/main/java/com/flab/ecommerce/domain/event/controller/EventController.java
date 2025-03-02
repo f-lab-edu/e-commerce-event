@@ -2,6 +2,7 @@ package com.flab.ecommerce.domain.event.controller;
 
 import com.flab.ecommerce.domain.event.dto.EventCreateRequestDTO;
 import com.flab.ecommerce.domain.event.dto.EventDetailResponseDTO;
+import com.flab.ecommerce.domain.event.dto.EventListResponseDTO;
 import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.service.EventService;
@@ -11,12 +12,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<EventListResponseDTO>>> getAllEvents(@RequestParam(required = false) EventStatus status) {
+        List<EventListResponseDTO> events = eventService.getAllEvents(status);
+        return ResponseEntity.ok(ApiResponse.success(events));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<EventDetailResponseDTO>> getEventById(@PathVariable long id) {
+        EventDetailResponseDTO event = eventService.getEventById(id);
+        return ResponseEntity.ok(ApiResponse.success(event));
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")

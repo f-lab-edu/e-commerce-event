@@ -2,6 +2,7 @@ package com.flab.ecommerce.domain.event.service;
 
 import com.flab.ecommerce.domain.event.dto.EventCreateRequestDTO;
 import com.flab.ecommerce.domain.event.dto.EventDetailResponseDTO;
+import com.flab.ecommerce.domain.event.dto.EventListResponseDTO;
 import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
@@ -13,12 +14,31 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
+
+    public List<EventListResponseDTO> getAllEvents(EventStatus status) {
+        if (status != null) {
+            return eventRepository.findByStatus(status).stream()
+                    .map(EventListResponseDTO::new)
+                    .toList();
+        } else {
+            return eventRepository.findAll().stream()
+                    .map(EventListResponseDTO::new)
+                    .toList();
+        }
+    }
+
+    public EventDetailResponseDTO getEventById(long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(EventNotFoundException::new);
+        return new EventDetailResponseDTO(event);
+    }
 
     @Transactional
     public EventDetailResponseDTO createEvent(EventCreateRequestDTO requestDTO) {
@@ -69,7 +89,7 @@ public class EventService {
     }
 
     private void validateEventPeriod(LocalDateTime startDate, LocalDateTime endDate) {
-        if(endDate.isBefore(startDate)) {
+        if (endDate.isBefore(startDate)) {
             throw new InvalidEventPeriodException(startDate, endDate);
         }
     }

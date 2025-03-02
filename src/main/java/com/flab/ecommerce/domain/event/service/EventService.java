@@ -5,7 +5,6 @@ import com.flab.ecommerce.domain.event.dto.EventDetailResponseDTO;
 import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
-import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventPeriodException;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
@@ -25,12 +24,10 @@ public class EventService {
     public EventDetailResponseDTO createEvent(EventCreateRequestDTO requestDTO) {
         validateEventPeriod(requestDTO.getStartDate(), requestDTO.getEndDate());
 
-        EventType eventType = EventType.fromCode(requestDTO.getType());
-
         Event event = Event.builder()
                 .name(requestDTO.getName())
                 .description(requestDTO.getDescription())
-                .type(eventType)
+                .type(requestDTO.getType())
                 .startDate(requestDTO.getStartDate())
                 .endDate(requestDTO.getEndDate())
                 .status(EventStatus.READY)
@@ -50,6 +47,23 @@ public class EventService {
         }
 
         event.update(requestDTO);
+
+        return new EventDetailResponseDTO(event);
+    }
+
+    @Transactional
+    public void deleteEvent(long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(EventNotFoundException::new);
+        eventRepository.delete(event);
+    }
+
+    @Transactional
+    public EventDetailResponseDTO changeEventStatus(long id, EventStatus status) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(EventNotFoundException::new);
+
+        event.changeStatus(status);
 
         return new EventDetailResponseDTO(event);
     }

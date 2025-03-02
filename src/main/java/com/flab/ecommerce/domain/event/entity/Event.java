@@ -70,11 +70,11 @@ public class Event {
         }
 
         if (requestDTO.getType() != null) {
-            this.type = EventType.fromCode(requestDTO.getType());
+            this.type = requestDTO.getType();
         }
     }
 
-    public void changeStatue(EventStatus status) {
+    public void changeStatus(EventStatus status) {
         this.status = status;
     }
 

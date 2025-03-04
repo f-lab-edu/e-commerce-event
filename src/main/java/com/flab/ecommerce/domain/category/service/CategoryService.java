@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.category.service;
 
+import ch.qos.logback.core.util.StringUtil;
 import com.flab.ecommerce.domain.category.dto.CategoryCreateRequestDTO;
 import com.flab.ecommerce.domain.category.dto.CategoryResponseDTO;
 import com.flab.ecommerce.domain.category.dto.CategoryUpdateRequestDTO;
@@ -7,6 +8,7 @@ import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.category.exception.CategoryAlreadyExistsException;
 import com.flab.ecommerce.domain.category.exception.CategoryNotFoundException;
 import com.flab.ecommerce.domain.category.repository.CategoryRepository;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,11 +67,11 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(CategoryNotFoundException::new);
 
-        if (requestDTO.getName() != null && !requestDTO.getName().equals(category.getName())) {
+        if (StringUtils.isNotBlank(requestDTO.getName()) && !requestDTO.getName().equals(category.getName())) {
             if(categoryRepository.existsByNameAndIdNot(requestDTO.getName(), id)) {
                 throw new CategoryAlreadyExistsException();
             }
-            category.updateName(requestDTO.getName());
+            category.updateName(requestDTO.getName().trim());
         }
 
         if (requestDTO.getParentCategoryId() != null) {

@@ -8,6 +8,7 @@ import com.flab.ecommerce.domain.member.enums.MemberRole;
 import com.flab.ecommerce.domain.member.exception.EmailAlreadyExistsException;
 import com.flab.ecommerce.domain.member.exception.MemberNotFoundException;
 import com.flab.ecommerce.domain.member.repository.MemberRepository;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,13 +53,12 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
-        if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()
+        if (StringUtils.isNotBlank(requestDTO.getName())
                 && !requestDTO.getName().equals(member.getName())) {
             member.updateName(requestDTO.getName());
         }
 
-        if (requestDTO.getPassword() != null
-                && !requestDTO.getPassword().isEmpty()
+        if (StringUtils.isNotBlank(requestDTO.getPassword())
                 && !passwordEncoder.matches(requestDTO.getPassword(), member.getPassword())) {
             member.changePassword(requestDTO.getPassword(), passwordEncoder);
             }

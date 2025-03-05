@@ -62,10 +62,7 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-        if (requestDTO.getStartDate() != null && requestDTO.getEndDate() != null) {
-            validateEventPeriod(requestDTO.getStartDate(), requestDTO.getEndDate());
-        }
-
+        validateEventPeriod(requestDTO.getStartDate(), requestDTO.getEndDate());
         event.update(requestDTO);
 
         return new EventDetailResponseDTO(event);

@@ -56,22 +56,11 @@ public class Event {
     private LocalDateTime updatedAt;
 
     public void update(EventUpdateRequestDTO requestDTO) {
-        if(requestDTO.getName() != null) {
-            this.name = requestDTO.getName();
-        }
-
-        if (requestDTO.getDescription() != null) {
-            this.description = requestDTO.getDescription();
-        }
-
-        if (requestDTO.getStartDate() != null && requestDTO.getEndDate() != null) {
-            this.startDate = requestDTO.getStartDate();
-            this.endDate = requestDTO.getEndDate();
-        }
-
-        if (requestDTO.getType() != null) {
-            this.type = requestDTO.getType();
-        }
+        this.name = requestDTO.getName();
+        this.description = requestDTO.getDescription();
+        this.type = requestDTO.getType();
+        this.startDate = requestDTO.getStartDate();
+        this.endDate = requestDTO.getEndDate();
     }
 
     public void changeStatus(EventStatus status) {

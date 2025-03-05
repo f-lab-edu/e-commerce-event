@@ -23,7 +23,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<MemberResponseDTO>> registerMember(@Valid @RequestBody MemberCreateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<MemberResponseDTO>> registerMember(@RequestBody @Valid MemberCreateRequestDTO requestDTO) {
         MemberResponseDTO member = memberService.registerMember(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(member));
     }
@@ -36,7 +36,7 @@ public class MemberController {
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<ApiResponse<MemberResponseDTO>> updateMyInfo(@Valid @RequestBody MemberUpdateRequestDTO requestDTO, Principal principal) {
+    public ResponseEntity<ApiResponse<MemberResponseDTO>> updateMyInfo(@RequestBody @Valid MemberUpdateRequestDTO requestDTO, Principal principal) {
         String email = principal.getName();
         MemberResponseDTO member = memberService.updateMyInfo(email, requestDTO);
         return ResponseEntity.ok(ApiResponse.success(member));
@@ -65,7 +65,7 @@ public class MemberController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<MemberResponseDTO>> updateMemberById(@PathVariable Long id, @Valid @RequestBody MemberUpdateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<MemberResponseDTO>> updateMemberById(@PathVariable Long id, @RequestBody @Valid MemberUpdateRequestDTO requestDTO) {
         MemberResponseDTO member = memberService.updateMemberById(id, requestDTO);
         return ResponseEntity.ok(ApiResponse.success(member));
     }

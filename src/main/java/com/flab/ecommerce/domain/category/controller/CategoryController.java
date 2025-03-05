@@ -42,14 +42,14 @@ public class CategoryController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(@Valid @RequestBody CategoryCreateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(@RequestBody @Valid CategoryCreateRequestDTO requestDTO) {
         CategoryResponseDTO category = categoryService.createCategory(requestDTO);
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<CategoryResponseDTO>> updateCategory(@PathVariable long id, @RequestBody CategoryUpdateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<CategoryResponseDTO>> updateCategory(@PathVariable long id, @RequestBody @Valid CategoryUpdateRequestDTO requestDTO) {
         CategoryResponseDTO category = categoryService.updateCategory(id, requestDTO);
         return ResponseEntity.ok(ApiResponse.success(category));
     }

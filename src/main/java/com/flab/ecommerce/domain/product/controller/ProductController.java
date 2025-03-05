@@ -42,14 +42,14 @@ public class ProductController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> createProduct(@RequestBody ProductCreateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> createProduct(@RequestBody @Valid ProductCreateRequestDTO requestDTO) {
         ProductDetailResponseDTO product = productService.createProduct(requestDTO);
         return ResponseEntity.ok(ApiResponse.success(product));
     }
 
     @PutMapping("{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> updateProduct(@PathVariable long id, @Valid @RequestBody ProductUpdateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> updateProduct(@PathVariable long id, @RequestBody @Valid ProductUpdateRequestDTO requestDTO) {
         ProductDetailResponseDTO product = productService.updateProduct(id, requestDTO);
         return ResponseEntity.ok(ApiResponse.success(product));
     }

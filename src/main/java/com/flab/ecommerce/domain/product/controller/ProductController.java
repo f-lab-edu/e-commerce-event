@@ -7,6 +7,7 @@ import com.flab.ecommerce.domain.product.dto.ProductListResponseDTO;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.product.service.ProductService;
 import com.flab.ecommerce.global.response.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,9 +47,9 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(product));
     }
 
-    @PatchMapping("{id}")
+    @PutMapping("{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> updateProduct(@PathVariable long id, @RequestBody ProductUpdateRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> updateProduct(@PathVariable long id, @Valid @RequestBody ProductUpdateRequestDTO requestDTO) {
         ProductDetailResponseDTO product = productService.updateProduct(id, requestDTO);
         return ResponseEntity.ok(ApiResponse.success(product));
     }

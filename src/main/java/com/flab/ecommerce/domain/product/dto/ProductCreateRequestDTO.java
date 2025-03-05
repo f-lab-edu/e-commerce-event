@@ -30,6 +30,7 @@ public class ProductCreateRequestDTO {
     @NotNull(message = "카테고리를 선택해주세요.")
     private Long categoryId;
 
+    @NotBlank(message = "상품 이미지 URL을 입력해주세요.")
     private String imageUrl;
 
 }

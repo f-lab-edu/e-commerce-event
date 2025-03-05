@@ -50,24 +50,11 @@ public class Product {
     private LocalDateTime updatedAt;
 
     public void update(ProductUpdateRequestDTO requestDTO, Category newCategory) {
-        if (requestDTO.getName() != null && !requestDTO.getName().isEmpty()) {
-            this.name = requestDTO.getName();
-        }
-        if (requestDTO.getDescription() != null && !requestDTO.getDescription().isEmpty()) {
-            this.description = requestDTO.getDescription();
-        }
-        if (requestDTO.getPrice() != null) {
-            this.price = requestDTO.getPrice();
-        }
-        if (requestDTO.getStockQuantity() > 0) {
-            this.stockQuantity = requestDTO.getStockQuantity();
-        }
-        if (requestDTO.getImageUrl() != null && !requestDTO.getImageUrl().isEmpty()) {
-            this.imageUrl = requestDTO.getImageUrl();
-        }
-        if (newCategory != null) {
-            this.category = newCategory;
-        }
+        this.name = requestDTO.getName();
+        this.description = requestDTO.getDescription();
+        this.price = requestDTO.getPrice();
+        this.stockQuantity = requestDTO.getStockQuantity();
+        this.imageUrl = requestDTO.getImageUrl();
+        this.category = newCategory;
     }
-
 }

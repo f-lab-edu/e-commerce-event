@@ -67,7 +67,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(CategoryNotFoundException::new);
 
-        if (StringUtils.isNotBlank(requestDTO.getName()) && !requestDTO.getName().equals(category.getName())) {
+        if (!requestDTO.getName().equals(category.getName())) {
             if(categoryRepository.existsByNameAndIdNot(requestDTO.getName(), id)) {
                 throw new CategoryAlreadyExistsException();
             }

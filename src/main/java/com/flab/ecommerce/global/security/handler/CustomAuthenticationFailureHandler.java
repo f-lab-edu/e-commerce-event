@@ -1,4 +1,4 @@
-package com.flab.ecommerce.global.security;
+package com.flab.ecommerce.global.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flab.ecommerce.global.response.ErrorResponse;

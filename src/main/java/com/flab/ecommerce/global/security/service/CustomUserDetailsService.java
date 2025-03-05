@@ -1,4 +1,4 @@
-package com.flab.ecommerce.global.security;
+package com.flab.ecommerce.global.security.service;
 
 import com.flab.ecommerce.domain.member.entity.Member;
 import com.flab.ecommerce.domain.member.repository.MemberRepository;

@@ -1,7 +1,8 @@
+/*
 package com.flab.ecommerce.global.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flab.ecommerce.domain.member.dto.LoginResponseDTO;
+import com.flab.ecommerce.global.security.dto.LoginResponseDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,3 +31,4 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         response.getWriter().write(objectMapper.writeValueAsString(responseDTO));
     }
 }
+*/

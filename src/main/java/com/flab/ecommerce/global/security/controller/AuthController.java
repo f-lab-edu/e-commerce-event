@@ -1,7 +1,6 @@
 package com.flab.ecommerce.global.security.controller;
 
 import com.flab.ecommerce.global.response.ApiResponse;
-import com.flab.ecommerce.global.response.ErrorResponse;
 import com.flab.ecommerce.global.security.dto.LoginRequestDTO;
 import com.flab.ecommerce.global.security.dto.LoginResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,10 +8,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,26 +29,20 @@ public class AuthController {
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인 합니다.")
     @PostMapping("/login")
-    public ApiResponse<?> login(@RequestBody LoginRequestDTO request, HttpSession session) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+    public ApiResponse<LoginResponseDTO> login(@RequestBody LoginRequestDTO request, HttpSession session) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-            SecurityContext securityContext = SecurityContextHolder.getContext();
-            securityContext.setAuthentication(authentication);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        securityContext.setAuthentication(authentication);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
 
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            LoginResponseDTO response = new LoginResponseDTO(userDetails.getUsername());
-            return ApiResponse.success(response);
-
-        } catch (DisabledException e) {
-            return ApiResponse.fail(401, "비활성화된 계정입니다.", "ACCOUNT_DISABLED");
-        } catch (AuthenticationException e) {
-            return ApiResponse.fail(401, "아이디 또는 비밀번호가 올바르지 않습니다.", "AUTHENTICATION_ERROR");
-        }
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        LoginResponseDTO response = new LoginResponseDTO(userDetails.getUsername());
+        return ApiResponse.success(response);
     }
+
 
     @Operation(summary = "로그아웃", description = "로그아웃을 처리합니다.")
     @PostMapping("/logout")

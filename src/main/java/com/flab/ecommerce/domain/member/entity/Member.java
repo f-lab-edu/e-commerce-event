@@ -47,6 +47,13 @@ public class Member {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    /**
+     * 관계 매핑 편의를 위해 추가된 생성자 (조회용으로만 사용)
+     */
+    public Member(Long id) {
+        this.id = id;
+    }
+
     public void updateName(String name) {
         this.name = name;
     }
@@ -60,4 +67,6 @@ public class Member {
     }
 
     public void activate() {this.isActive = true;}
+
+
 }

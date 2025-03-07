@@ -8,15 +8,13 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor
 public class CartResponseDTO {
     private List<CartItemResponseDTO> items;
     private BigDecimal totalPrice;
 
-    public CartResponseDTO(Cart cart) {
-        this.items = cart.getItems().stream()
-                .map(CartItemResponseDTO::new)
-                .toList();
-        this.totalPrice = cart.getTotalPrice();
+    public CartResponseDTO(List<CartItemResponseDTO> items, BigDecimal totalPrice) {
+        this.items = items;
+        this.totalPrice = totalPrice;
     }
+
 }

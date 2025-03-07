@@ -2,6 +2,7 @@ package com.flab.ecommerce.domain.product.entity;
 
 import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
+import com.flab.ecommerce.domain.product.exception.OutOfStockException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,5 +57,28 @@ public class Product {
         this.stockQuantity = requestDTO.getStockQuantity();
         this.imageUrl = requestDTO.getImageUrl();
         this.category = newCategory;
+    }
+
+    public void checkStock(int requestQuantity) {
+        if (this.stockQuantity <= 0) {
+            throw new OutOfStockException(this.id, this.stockQuantity, requestQuantity);
+        }
+
+        if(this.stockQuantity < requestQuantity) {
+            throw new OutOfStockException(this.id, this.stockQuantity, requestQuantity);
+        }
+    }
+
+    public void decreaseStock(int quantity) {
+        checkStock(quantity);
+        this.stockQuantity -= quantity;
+    }
+
+    public int getShortageCount(int requestedQuantity) {
+        return Math.max(0, requestedQuantity - this.stockQuantity);
+    }
+
+    public boolean isOutOfStock() {
+        return this.stockQuantity == 0;
     }
 }

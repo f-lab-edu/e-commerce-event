@@ -1,4 +1,4 @@
-package com.flab.ecommerce.global.security.config;
+package com.flab.ecommerce.global.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;

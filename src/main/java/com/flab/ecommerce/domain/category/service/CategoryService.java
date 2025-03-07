@@ -1,6 +1,5 @@
 package com.flab.ecommerce.domain.category.service;
 
-import ch.qos.logback.core.util.StringUtil;
 import com.flab.ecommerce.domain.category.dto.CategoryCreateRequestDTO;
 import com.flab.ecommerce.domain.category.dto.CategoryResponseDTO;
 import com.flab.ecommerce.domain.category.dto.CategoryUpdateRequestDTO;
@@ -8,7 +7,6 @@ import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.category.exception.CategoryAlreadyExistsException;
 import com.flab.ecommerce.domain.category.exception.CategoryNotFoundException;
 import com.flab.ecommerce.domain.category.repository.CategoryRepository;
-import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,7 +69,7 @@ public class CategoryService {
             if(categoryRepository.existsByNameAndIdNot(requestDTO.getName(), id)) {
                 throw new CategoryAlreadyExistsException();
             }
-            category.updateName(requestDTO.getName().trim());
+            category.updateName(requestDTO.getName());
         }
 
         if (requestDTO.getParentCategoryId() != null) {

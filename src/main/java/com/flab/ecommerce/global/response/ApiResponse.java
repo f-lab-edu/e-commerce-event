@@ -28,18 +28,4 @@ public class ApiResponse<T> {
         return new ApiResponse<>(201, "Created", data);
     }
 
-    public static ApiResponse<ErrorDetail> fail(int status, String message, String errorCode) {
-        return new ApiResponse<>(status, "Fail", new ErrorDetail(message, errorCode));
-    }
-
-    @Getter
-    public static class ErrorDetail {
-        private final String message;
-        private final String errorCode;
-
-        public ErrorDetail(String message, String errorCode) {
-            this.message = message;
-            this.errorCode = errorCode;
-        }
-    }
 }

@@ -35,6 +35,7 @@ public class MemberService {
                 .email(requestDTO.getEmail())
                 .name(requestDTO.getName())
                 .password(encodedPassword)
+                .defaultAddress(requestDTO.getAddress())
                 .role(MemberRole.USER)
                 .isActive(true)
                 .build();
@@ -61,7 +62,11 @@ public class MemberService {
         if (StringUtils.isNotBlank(requestDTO.getPassword())
                 && !passwordEncoder.matches(requestDTO.getPassword(), member.getPassword())) {
             member.changePassword(requestDTO.getPassword(), passwordEncoder);
-            }
+        }
+
+        if (requestDTO.getAddress() != null) {
+            member.updateAddress(requestDTO.getAddress());
+        }
 
         return new MemberResponseDTO(member);
     }

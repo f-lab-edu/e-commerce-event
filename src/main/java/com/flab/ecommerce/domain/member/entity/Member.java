@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.member.entity;
 
+import com.flab.ecommerce.domain.common.Address;
 import com.flab.ecommerce.domain.member.enums.MemberRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,11 +48,18 @@ public class Member {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Embedded
+    private Address defaultAddress;
+
     /**
      * 관계 매핑 편의를 위해 추가된 생성자 (조회용으로만 사용)
      */
     public Member(Long id) {
         this.id = id;
+    }
+
+    public void updateAddress(Address newAddress) {
+        this.defaultAddress = newAddress;
     }
 
     public void updateName(String name) {
@@ -66,7 +74,9 @@ public class Member {
         this.isActive = false;
     }
 
-    public void activate() {this.isActive = true;}
+    public void activate() {
+        this.isActive = true;
+    }
 
 
 }

@@ -68,4 +68,11 @@ public class Product {
             throw new OutOfStockException(this.id, this.stockQuantity, requestQuantity);
         }
     }
+
+    public void decreaseStock(int quantity) {
+        if(this.stockQuantity < quantity) {
+            throw new OutOfStockException(this.id, this.stockQuantity, quantity);
+        }
+        this.stockQuantity -= quantity;
+    }
 }

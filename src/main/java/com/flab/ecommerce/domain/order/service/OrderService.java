@@ -3,7 +3,6 @@ package com.flab.ecommerce.domain.order.service;
 import com.flab.ecommerce.domain.cart.dto.CartResponseDTO;
 import com.flab.ecommerce.domain.cart.exception.CartEmptyException;
 import com.flab.ecommerce.domain.cart.service.CartService;
-import com.flab.ecommerce.domain.common.Address;
 import com.flab.ecommerce.domain.common.ShippingAddress;
 import com.flab.ecommerce.domain.member.entity.Member;
 import com.flab.ecommerce.domain.member.exception.MemberNotFoundException;
@@ -11,7 +10,8 @@ import com.flab.ecommerce.domain.member.repository.MemberRepository;
 import com.flab.ecommerce.domain.order.dto.OrderRequestDTO;
 import com.flab.ecommerce.domain.order.dto.OrderResponseDTO;
 import com.flab.ecommerce.domain.order.entity.Order;
-import com.flab.ecommerce.domain.order.entity.OrderItem;
+import com.flab.ecommerce.domain.order.exception.OrderCancellationNotAllowedException;
+import com.flab.ecommerce.domain.order.exception.OrderNotFoundException;
 import com.flab.ecommerce.domain.order.repository.OrderRepository;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.service.ProductService;
@@ -28,7 +28,6 @@ import java.util.Optional;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductService productService;
-    private final ProductStatusChecker statusChecker;
     private final MemberRepository memberRepository;
     private final CartService cartService;
 
@@ -55,18 +54,52 @@ public class OrderService {
 
         Order order = new Order(memberId, cart.getTotalPrice(), shippingAddress);
 
-        List<OrderItem> orderItems = cart.getItems().stream()
-                .map(cartItem -> {
-                    Product product = productService.getProductOrThrow(cartItem.getProductId());
-                    return new OrderItem(order, product, cartItem.getQuantity());
-                })
-                .toList();
-
-        order.addOrderItems(orderItems);
+        cart.getItems().forEach(cartItem -> {
+            Product product = productService.getProductOrThrow(cartItem.getProductId());
+            order.addOrderItem(product, cartItem.getQuantity());
+        });
 
         orderRepository.save(order);
         cartService.clearCart(memberId);
 
         return new OrderResponseDTO(order);
     }
+
+    public List<OrderResponseDTO> getMyOrders(Long memberId) {
+        return orderRepository.findByMemberIdOrderByIdDesc(memberId)
+                .stream()
+                .map(OrderResponseDTO::new)
+                .toList();
+    }
+
+    @Transactional
+    public void cancelOrder(Long orderId, Long memberId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
+        if (!order.getMemberId().equals(memberId)) {
+            throw new OrderCancellationNotAllowedException();
+        }
+        order.cancel(memberId);
+    }
+
+    public List<OrderResponseDTO> getAllOrders() {
+        return orderRepository.findAll()
+                .stream()
+                .map(OrderResponseDTO::new)
+                .toList();
+    }
+
+    public OrderResponseDTO getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
+        return new OrderResponseDTO(order);
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
+        orderRepository.delete(order);
+    }
+
 }

@@ -2,6 +2,8 @@ package com.flab.ecommerce.domain.order.entity;
 
 import com.flab.ecommerce.domain.common.ShippingAddress;
 import com.flab.ecommerce.domain.order.enums.OrderStatus;
+import com.flab.ecommerce.domain.order.exception.OrderCancellationNotAllowedException;
+import com.flab.ecommerce.domain.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,8 +41,15 @@ public class Order {
         this.status = OrderStatus.PENDING;
     }
 
-    public void addOrderItems(List<OrderItem> items) {
-        this.orderItems.addAll(items);
+    public void addOrderItem(Product product, int quantity) {
+        this.orderItems.add(new OrderItem(this, product, quantity));
+    }
+
+    public void cancel(Long memberId) {
+        if (!this.memberId.equals(memberId)) {
+            throw new OrderCancellationNotAllowedException();
+        }
+        this.status = OrderStatus.CANCELED;
     }
 
     public void completeOrder() {

@@ -48,8 +48,11 @@ public class Member {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Column(nullable = false)
+    private String phoneNumber;
+
     @Embedded
-    private Address defaultAddress;
+    private Address address;
 
     /**
      * 관계 매핑 편의를 위해 추가된 생성자 (조회용으로만 사용)
@@ -59,11 +62,15 @@ public class Member {
     }
 
     public void updateAddress(Address newAddress) {
-        this.defaultAddress = newAddress;
+        this.address = newAddress;
     }
 
     public void updateName(String name) {
         this.name = name;
+    }
+
+    public void updatePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public void changePassword(String password, PasswordEncoder passwordEncoder) {

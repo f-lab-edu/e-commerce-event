@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.order.entity;
 
+import com.flab.ecommerce.domain.common.ShippingAddress;
 import com.flab.ecommerce.domain.order.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,13 +26,21 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @Embedded
+    private ShippingAddress shippingAddress;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Order(Long memberId, BigDecimal totalPrice) {
+    public Order(Long memberId, BigDecimal totalPrice, ShippingAddress shippingAddress) {
         this.memberId = memberId;
         this.totalPrice = totalPrice;
+        this.shippingAddress = shippingAddress;
         this.status = OrderStatus.PENDING;
+    }
+
+    public void addOrderItems(List<OrderItem> items) {
+        this.orderItems.addAll(items);
     }
 
     public void completeOrder() {

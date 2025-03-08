@@ -5,64 +5,95 @@ import com.flab.ecommerce.domain.cart.dto.CartItemResponseDTO;
 import com.flab.ecommerce.domain.cart.dto.CartResponseDTO;
 import com.flab.ecommerce.domain.cart.entity.Cart;
 import com.flab.ecommerce.domain.cart.entity.CartItem;
+import com.flab.ecommerce.domain.cart.exception.CartItemNotFoundException;
 import com.flab.ecommerce.domain.cart.repository.CartRepository;
 import com.flab.ecommerce.domain.product.entity.Product;
-import com.flab.ecommerce.domain.product.exception.ProductNotFoundException;
-import com.flab.ecommerce.domain.product.repository.ProductRepository;
-import lombok.AllArgsConstructor;
+import com.flab.ecommerce.domain.product.enums.ProductStatus;
+import com.flab.ecommerce.domain.product.service.ProductService;
+import com.flab.ecommerce.domain.product.service.ProductStatusChecker;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CartService {
+
     private final CartRepository cartRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
+    private final ProductStatusChecker statusChecker;
 
+    @Transactional
     public CartResponseDTO getCart(Long memberId) {
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseGet(() -> cartRepository.save(new Cart(memberId)));
-
-        List<CartItemResponseDTO> items = cart.getItems().stream()
-                .map(item -> {
-                    Product product = productRepository.findById(item.getProduct().getId())
-                            .orElseThrow(() -> new ProductNotFoundException(item.getProduct().getId()));
-
-                    return new CartItemResponseDTO(item, product);
-                }).toList();
-
-        return new CartResponseDTO(items, cart.getTotalPrice());
+        Cart cart = findOrCreateCart(memberId);
+        return new CartResponseDTO(cartToItemResponseList(cart), calculateTotal(cart));
     }
 
     @Transactional
-    public CartResponseDTO addItem(Long memberId, CartItemAddRequestDTO requestDTO) {
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseGet(() -> cartRepository.save(new Cart(memberId)));
+    public CartResponseDTO addCartItem(Long memberId, CartItemAddRequestDTO request) {
+        Cart cart = findOrCreateCart(memberId);
+        Product product = productService.getProductOrThrow(request.getProductId());
+        product.checkStock(request.getQuantity());
 
-        Product product = productRepository.findById(requestDTO.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException(requestDTO.getProductId()));
-
-        product.checkStock(requestDTO.getQuantity());
-
-        CartItem cartItem = cart.getItem(product.getId())
+        CartItem cartItem = cart.findItem(product.getId())
                 .orElseGet(() -> {
                     CartItem newItem = new CartItem(cart, product, 0);
                     cart.getItems().add(newItem);
                     return newItem;
                 });
 
-        cartItem.increaseQuantity(requestDTO.getQuantity());
-        List<CartItemResponseDTO> items = cart.getItems().stream()
-                .map(item -> new CartItemResponseDTO(item, item.getProduct()))
-                .toList();
-
-        return new CartResponseDTO(items, cart.getTotalPrice());
+        cartItem.increaseQuantity(request.getQuantity());
+        return new CartResponseDTO(cartToItemResponseList(cart), calculateTotal(cart));
     }
 
+    @Transactional
+    public CartResponseDTO updateCartItemQuantity(Long memberId, Long productId, int quantity) {
+        Cart cart = findOrCreateCart(memberId);
+        CartItem item = cart.findItem(productId)
+                .orElseThrow(() -> new CartItemNotFoundException(productId));
+        productService.getProductOrThrow(productId).checkStock(quantity);
+        item.changeQuantity(quantity);
+        return new CartResponseDTO(cartToItemResponseList(cart), calculateTotal(cart));
+    }
+
+    @Transactional
+    public CartResponseDTO removeCartItem(Long memberId, Long productId) {
+        Cart cart = findOrCreateCart(memberId);
+        cart.removeItem(productId);
+        return new CartResponseDTO(cartToItemResponseList(cart), calculateTotal(cart));
+    }
+
+    @Transactional
+    public CartResponseDTO clearCart(Long memberId) {
+        Cart cart = findOrCreateCart(memberId);
+        cart.clearAllItems();
+        return new CartResponseDTO(cartToItemResponseList(cart), calculateTotal(cart));
+    }
+
+    private Cart findOrCreateCart(Long memberId) {
+        return cartRepository.findByMemberId(memberId)
+                .orElseGet(() -> cartRepository.save(new Cart(memberId)));
+    }
+
+
+    private List<CartItemResponseDTO> cartToItemResponseList(Cart cart) {
+        return cart.getItems().stream()
+                .map(item -> CartItemResponseDTO.from(
+                        item,
+                        statusChecker.getStock(item.getProductId()),
+                        statusChecker.check(item.getProductId())
+                ))
+                .toList();
+    }
+
+    private BigDecimal calculateTotal(Cart cart) {
+        return cart.getItems().stream()
+                .map(item -> item.getProductPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+
 }
-
-
-

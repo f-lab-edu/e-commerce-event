@@ -22,28 +22,26 @@ public class CartItem {
     @JoinColumn(name = "cart_id")
     private Cart cart;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
-
+    private Long productId;
+    private String productName;
+    private BigDecimal productPrice;
     private int quantity;
-
-    @Column(nullable = false)
-    private BigDecimal price;
 
     public CartItem(Cart cart, Product product, int quantity) {
         this.cart = cart;
-        this.product = product;
+        this.productId = product.getId();
+        this.productName = product.getName();
+        this.productPrice = product.getPrice();
         this.quantity = quantity;
-        this.price = product.getPrice();
-    }
-
-    public BigDecimal getTotalPrice() {
-        return price.multiply(BigDecimal.valueOf(quantity));
     }
 
     public void increaseQuantity(int quantity) {
         this.quantity += quantity;
     }
+
+    public void changeQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
 
 }

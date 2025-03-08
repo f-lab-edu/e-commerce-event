@@ -1,6 +1,5 @@
 package com.flab.ecommerce.domain.cart.entity;
 
-import com.flab.ecommerce.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +18,6 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "member_id", nullable = false)
     private Long memberId;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -29,16 +27,17 @@ public class Cart {
         this.memberId = memberId;
     }
 
-    public Optional<CartItem> getItem(Long productId) {
+    public Optional<CartItem> findItem(Long productId) {
         return items.stream()
-                .filter(i -> i.getProduct().getId().equals(productId))
+                .filter(item -> item.getProductId().equals(productId))
                 .findFirst();
     }
 
-    public BigDecimal getTotalPrice() {
-        return items.stream()
-                .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public void removeItem(Long productId) {
+        items.removeIf(item -> item.getProductId().equals(productId));
     }
 
+    public void clearAllItems() {
+        items.clear();
+    }
 }

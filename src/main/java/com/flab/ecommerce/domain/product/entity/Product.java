@@ -68,17 +68,4 @@ public class Product {
             throw new OutOfStockException(this.id, this.stockQuantity, requestQuantity);
         }
     }
-
-    public void decreaseStock(int quantity) {
-        checkStock(quantity);
-        this.stockQuantity -= quantity;
-    }
-
-    public int getShortageCount(int requestedQuantity) {
-        return Math.max(0, requestedQuantity - this.stockQuantity);
-    }
-
-    public boolean isOutOfStock() {
-        return this.stockQuantity == 0;
-    }
 }

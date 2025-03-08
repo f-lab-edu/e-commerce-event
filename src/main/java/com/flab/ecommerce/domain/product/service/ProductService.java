@@ -22,6 +22,15 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+    public Product getProductOrThrow(long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+    }
+
+    public Product findProductOrNull(long id) {
+        return productRepository.findById(id).orElse(null);
+    }
+
     public List<ProductListResponseDTO> getAllProducts() {
         return productRepository.findAll()
                 .stream()

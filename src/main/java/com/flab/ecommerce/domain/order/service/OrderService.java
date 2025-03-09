@@ -10,12 +10,13 @@ import com.flab.ecommerce.domain.member.repository.MemberRepository;
 import com.flab.ecommerce.domain.order.dto.OrderRequestDTO;
 import com.flab.ecommerce.domain.order.dto.OrderResponseDTO;
 import com.flab.ecommerce.domain.order.entity.Order;
-import com.flab.ecommerce.domain.order.exception.OrderCancellationNotAllowedException;
+import com.flab.ecommerce.domain.order.enums.OrderStatus;
+import com.flab.ecommerce.domain.order.exception.OrderPermissionDeniedException;
 import com.flab.ecommerce.domain.order.exception.OrderNotFoundException;
+import com.flab.ecommerce.domain.order.exception.OrderStatusChangeNotAllowedException;
 import com.flab.ecommerce.domain.order.repository.OrderRepository;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.service.ProductService;
-import com.flab.ecommerce.domain.product.service.ProductStatusChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,19 +73,28 @@ public class OrderService {
                 .toList();
     }
 
+    public OrderResponseDTO getMyOrderById(Long orderId, Long memberId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
+        if(!order.getMemberId().equals(memberId)) {
+            throw new OrderPermissionDeniedException();
+        }
+        return new OrderResponseDTO(order);
+    }
+
     @Transactional
     public void cancelOrder(Long orderId, Long memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(OrderNotFoundException::new);
         if (!order.getMemberId().equals(memberId)) {
-            throw new OrderCancellationNotAllowedException();
+            throw new OrderPermissionDeniedException();
         }
         order.cancel(memberId);
     }
 
-    public List<OrderResponseDTO> getAllOrders() {
-        return orderRepository.findAll()
-                .stream()
+    public List<OrderResponseDTO> getAllOrders(OrderStatus status) {
+        return orderRepository.findAll().stream()
+                .filter(order -> status == null || order.getStatus() == status)
                 .map(OrderResponseDTO::new)
                 .toList();
     }
@@ -95,11 +105,11 @@ public class OrderService {
         return new OrderResponseDTO(order);
     }
 
-    @Transactional
-    public void deleteOrder(Long orderId) {
+    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(OrderNotFoundException::new);
-        orderRepository.delete(order);
-    }
 
+        order.updateStatus(status);
+        return new OrderResponseDTO(order);
+    }
 }

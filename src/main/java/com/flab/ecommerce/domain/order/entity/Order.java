@@ -2,7 +2,9 @@ package com.flab.ecommerce.domain.order.entity;
 
 import com.flab.ecommerce.domain.common.ShippingAddress;
 import com.flab.ecommerce.domain.order.enums.OrderStatus;
-import com.flab.ecommerce.domain.order.exception.OrderCancellationNotAllowedException;
+import com.flab.ecommerce.domain.order.exception.OrderAlreadyShippedException;
+import com.flab.ecommerce.domain.order.exception.OrderPermissionDeniedException;
+import com.flab.ecommerce.domain.order.exception.OrderStatusChangeNotAllowedException;
 import com.flab.ecommerce.domain.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -47,9 +49,22 @@ public class Order {
 
     public void cancel(Long memberId) {
         if (!this.memberId.equals(memberId)) {
-            throw new OrderCancellationNotAllowedException();
+            throw new OrderPermissionDeniedException();
         }
+
+        if (this.status == OrderStatus.SHIPPED || this.status == OrderStatus.DELIVERED) {
+            throw new OrderAlreadyShippedException();
+        }
+
         this.status = OrderStatus.CANCELED;
+    }
+
+    public void updateStatus(OrderStatus status) {
+        if (this.status == OrderStatus.CANCELED || this.status == OrderStatus.DELIVERED) {
+            throw new OrderStatusChangeNotAllowedException();
+        }
+
+        this.status = status;
     }
 
     public void completeOrder() {

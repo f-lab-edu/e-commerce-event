@@ -2,6 +2,7 @@ package com.flab.ecommerce.domain.order.controller;
 
 import com.flab.ecommerce.domain.order.dto.OrderRequestDTO;
 import com.flab.ecommerce.domain.order.dto.OrderResponseDTO;
+import com.flab.ecommerce.domain.order.enums.OrderStatus;
 import com.flab.ecommerce.domain.order.service.OrderService;
 import com.flab.ecommerce.global.response.ApiResponse;
 import com.flab.ecommerce.global.security.provider.LoginMemberProvider;
@@ -26,12 +27,18 @@ public class OrderController {
     private final LoginMemberProvider loginMemberProvider;
 
     @Operation(summary = "내 주문 목록 조회", description = "현재 로그인한 사용자의 주문 목록을 조회합니다.")
-    @GetMapping
+    @GetMapping("/me")
     public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getMyOrders(Principal principal) {
         Long memberId = loginMemberProvider.getLoginMemberId(principal);
         return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(memberId)));
     }
 
+    @Operation(summary = "내 주문 상세 조회", description = "현재 로그인한 사용자의 특정 주문을 조회합니다.")
+    @GetMapping("/me/{orderId}")
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> getMyOrderById(Principal principal, @PathVariable Long orderId) {
+        Long memberId = loginMemberProvider.getLoginMemberId(principal);
+        return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrderById(orderId, memberId)));
+    }
 
     @Operation(summary = "주문 생성", description = "장바구니에 담긴 상품을 주문합니다.")
     @PostMapping
@@ -49,11 +56,11 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("주문이 취소되었습니다."));
     }
 
-    @Operation(summary = "모든 주문 조회 (관리자)", description = "관리자가 전체 주문 목록을 조회합니다.")
+    @Operation(summary = "모든 주문 조회 (관리자)", description = "관리자가 전체 주문 목록을 조회합니다. status 파라미터를 추가하면 해당 상태의 주문만 필터링 할 수 있습니다.")
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getAllOrders() {
-        List<OrderResponseDTO> orders = orderService.getAllOrders();
+    @GetMapping()
+    public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getAllOrders(@RequestParam(required = false) OrderStatus status) {
+        List<OrderResponseDTO> orders = orderService.getAllOrders(status);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 
@@ -65,13 +72,12 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(order));
     }
 
-    @Operation(summary = "주문 삭제 (관리자)", description = "관리자가 특정 주문을 삭제합니다.")
+    @Operation(summary = "주문 상태 변경 (관리자)", description = "관리자가 특정 주문의 상태를 변경합니다.")
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{orderId}")
-    public ResponseEntity<ApiResponse<String>> deleteOrder(@PathVariable Long orderId) {
-        orderService.deleteOrder(orderId);
-        return ResponseEntity.ok(ApiResponse.success("주문이 삭제되었습니다."));
+    @PatchMapping("/{orderId}/status")
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> updateOrderStatus(@PathVariable Long orderId, @RequestParam OrderStatus status) {
+        OrderResponseDTO order = orderService.updateOrderStatus(orderId, status);
+        return ResponseEntity.ok(ApiResponse.success(order));
     }
-
 
 }

@@ -13,7 +13,6 @@ import com.flab.ecommerce.domain.order.entity.Order;
 import com.flab.ecommerce.domain.order.enums.OrderStatus;
 import com.flab.ecommerce.domain.order.exception.OrderPermissionDeniedException;
 import com.flab.ecommerce.domain.order.exception.OrderNotFoundException;
-import com.flab.ecommerce.domain.order.exception.OrderStatusChangeNotAllowedException;
 import com.flab.ecommerce.domain.order.repository.OrderRepository;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.product.service.ProductService;
@@ -56,7 +55,7 @@ public class OrderService {
         Order order = new Order(memberId, cart.getTotalPrice(), shippingAddress);
 
         cart.getItems().forEach(cartItem -> {
-            Product product = productService.getProductOrThrow(cartItem.getProductId());
+            Product product = productService.getProduct(cartItem.getProductId());
             order.addOrderItem(product, cartItem.getQuantity());
         });
 
@@ -105,6 +104,7 @@ public class OrderService {
         return new OrderResponseDTO(order);
     }
 
+    @Transactional
     public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(OrderNotFoundException::new);

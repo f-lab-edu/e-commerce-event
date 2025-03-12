@@ -35,7 +35,7 @@ public class CartService {
     @Transactional
     public CartResponseDTO addCartItem(Long memberId, CartItemAddRequestDTO request) {
         Cart cart = findOrCreateCart(memberId);
-        Product product = productService.getProductOrThrow(request.getProductId());
+        Product product = productService.getProduct(request.getProductId());
         product.checkStock(request.getQuantity());
 
         CartItem cartItem = cart.findItem(product.getId())
@@ -54,7 +54,7 @@ public class CartService {
         Cart cart = findOrCreateCart(memberId);
         CartItem item = cart.findItem(productId)
                 .orElseThrow(() -> new CartItemNotFoundException(productId));
-        productService.getProductOrThrow(productId).checkStock(quantity);
+        productService.getProduct(productId).checkStock(quantity);
         item.changeQuantity(quantity);
         return new CartResponseDTO(cartToItemResponseList(cart), calculateTotal(cart));
     }
@@ -81,6 +81,7 @@ public class CartService {
 
     private List<CartItemResponseDTO> cartToItemResponseList(Cart cart) {
         return cart.getItems().stream()
+                .filter(item -> statusChecker.check(item.getProductId()) != ProductStatus.DELETED)
                 .map(item -> CartItemResponseDTO.from(
                         item,
                         statusChecker.getStock(item.getProductId()),

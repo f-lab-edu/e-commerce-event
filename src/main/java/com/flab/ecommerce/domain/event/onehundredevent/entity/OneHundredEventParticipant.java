@@ -1,6 +1,5 @@
 package com.flab.ecommerce.domain.event.onehundredevent.entity;
 
-import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,5 +28,16 @@ public class OneHundredEventParticipant {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ParticipantStatus status;
+
+    public void confirmParticipation() {
+        if (this.status != ParticipantStatus.PENDING) {
+            throw new IllegalStateException("결제 대기 상태가 아닌 경우 확정할 수 없습니다.");
+        }
+        this.status = ParticipantStatus.CONFIRMED;
+    }
+
+    public void cancelParticipation() {
+        this.status = ParticipantStatus.CANCELED;
+    }
 
 }

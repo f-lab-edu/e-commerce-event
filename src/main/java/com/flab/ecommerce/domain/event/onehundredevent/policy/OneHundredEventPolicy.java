@@ -39,11 +39,10 @@ public class OneHundredEventPolicy extends EventPolicy {
             OneHundredEventParticipant participant = OneHundredEventParticipant.builder()
                     .eventId(event.getId())
                     .memberId(memberId)
-                    .status(ParticipantStatus.CONFIRMED)
+                    .status(ParticipantStatus.PENDING)
                     .build();
 
             participantRepository.save(participant);
-            event.decreaseEventStock();
         });
     }
 }

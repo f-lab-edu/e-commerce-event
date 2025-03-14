@@ -26,5 +26,14 @@ public class OneHundredEventController {
         return ResponseEntity.ok(ApiResponse.success("참가 신청이 완료되었습니다."));
     }
 
+    @PostMapping("/confirm")
+    public ResponseEntity<ApiResponse<String>> confirmParticipation(
+            @PathVariable Long eventId, Principal principal) {
+        Long memberId = loginMemberProvider.getLoginMemberId(principal);
+        oneHundredEventService.confirmParticipation(eventId, memberId);
+        return ResponseEntity.ok(ApiResponse.success("참여가 확정되었습니다."));
+    }
+
+
 
 }

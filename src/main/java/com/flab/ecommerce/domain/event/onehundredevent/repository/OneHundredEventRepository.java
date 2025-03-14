@@ -17,4 +17,6 @@ public interface OneHundredEventRepository extends JpaRepository<OneHundredEvent
 
     @Query("SELECT p FROM OneHundredEventParticipant p WHERE p.status = 'PENDING' AND p.expiredAt < :now")
     List<OneHundredEventParticipant> findExpiredParticipants(LocalDateTime now);
+
+    long countByEventId(Long eventId);
 }

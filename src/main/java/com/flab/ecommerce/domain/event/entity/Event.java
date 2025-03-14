@@ -85,4 +85,8 @@ public class Event {
     public void restoreEventStock() {
         this.eventStock++;
     }
+
+    public long getMaxParticipants() {
+        return this.maxParticipant;
+    }
 }

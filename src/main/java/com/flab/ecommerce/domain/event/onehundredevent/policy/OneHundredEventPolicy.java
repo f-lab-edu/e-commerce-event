@@ -3,6 +3,7 @@ package com.flab.ecommerce.domain.event.onehundredevent.policy;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.exception.EventStockNotEnoughException;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
+import com.flab.ecommerce.domain.event.exception.MaxParticipantsExceededException;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
@@ -32,6 +33,11 @@ public class OneHundredEventPolicy extends EventPolicy {
         userId.ifPresent(memberId -> {
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(EventNotFoundException::new);
+
+            long currentParticipants = participantRepository.countByEventId(eventId);
+            if (currentParticipants >= event.getMaxParticipants()) {
+                throw new MaxParticipantsExceededException();
+            }
 
             if (event.getEventStock() <= 0) {
                 throw new EventStockNotEnoughException();

@@ -13,6 +13,7 @@ import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEven
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OneHundredEventService {
@@ -53,6 +54,7 @@ public class OneHundredEventService {
         List<OneHundredEventParticipant> expiredParticipants = oneHundredEventRepository.findExpiredParticipants(LocalDateTime.now());
 
         for (OneHundredEventParticipant participant : expiredParticipants) {
+            log.info("[참가 취소] 이벤트 ID: {}, 유저 ID: {}", participant.getEventId(), participant.getMemberId());
 
             Event event = eventRepository.findById(participant.getEventId())
                     .orElseThrow(EventNotFoundException::new);
@@ -62,6 +64,7 @@ public class OneHundredEventService {
             oneHundredEventRepository.save(participant);
             oneHundredEventQueueService.removeUserFromQueue(participant.getEventId(), participant.getMemberId());
 
+            log.info("[스케줄러 완료] 만료된 참가자 취소 완료");
         }
     }
 

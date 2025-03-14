@@ -31,4 +31,7 @@ public class EventCreateRequestDTO {
     @NotNull(message = "이벤트 종료일은 필수입니다.")
     @Future(message = "이벤트 종료일은 미래 날짜여야 합니다.")
     private LocalDateTime endDate;
+
+    private int eventStock;
+    private int maxParticipant;
 }

@@ -5,7 +5,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,8 +46,7 @@ public class OneHundredEventQueueService {
             return false;
         }
 
-        List<String> queueList = Optional.ofNullable(redisTemplate.opsForList().range(queueKey, 0, -1))
-                .orElse(Collections.emptyList());
+        List<String> queueList = redisTemplate.opsForList().range(queueKey, 0, -1);
         return queueList.contains(String.valueOf(memberId));
     }
 }

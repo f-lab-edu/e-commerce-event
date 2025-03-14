@@ -3,17 +3,22 @@ package com.flab.ecommerce.domain.event.onehundredevent.service;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
-import com.flab.ecommerce.domain.event.exception.EventStockNotEnoughException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventTypeException;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
-import com.flab.ecommerce.domain.event.onehundredevent.exception.OneHundredEventException;
+import com.flab.ecommerce.domain.event.onehundredevent.exception.AlreadyInQueueException;
+import com.flab.ecommerce.domain.event.exception.AlreadyParticipatedException;
+import com.flab.ecommerce.domain.event.onehundredevent.exception.NotInPendingStateException;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Service
@@ -31,52 +36,62 @@ public class OneHundredEventService {
         validateEvent(eventId);
         validateQueue(eventId, memberId);
         oneHundredEventQueueService.addToQueue(eventId, memberId);
+
+        eventPolicy.applyEvent(eventId);
     }
 
     @Transactional
     public void confirmParticipation(Long eventId, Long memberId) {
         OneHundredEventParticipant participant = validateParticipant(eventId, memberId);
-        Event event = validateEvent(eventId);
-        validateStock(event);
-
+        validateEvent(eventId);
         participant.confirmParticipation();
-        event.decreaseEventStock();
     }
 
-    private Event validateEvent(Long eventId) {
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void cancelExpiredParticipants() {
+        List<OneHundredEventParticipant> expiredParticipants = oneHundredEventRepository.findExpiredParticipants(LocalDateTime.now());
+
+        for (OneHundredEventParticipant participant : expiredParticipants) {
+
+            Event event = eventRepository.findById(participant.getEventId())
+                    .orElseThrow(EventNotFoundException::new);
+
+            participant.cancelParticipation();
+            event.restoreEventStock();
+            oneHundredEventRepository.save(participant);
+            oneHundredEventQueueService.removeUserFromQueue(participant.getEventId(), participant.getMemberId());
+
+        }
+    }
+
+    private void validateEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
         if (event.getType() != EventType.ONE_HUNDRED_WON_DEAL) {
             throw new InvalidEventTypeException();
         }
-        return event;
     }
 
     private void validateQueue(Long eventId, Long memberId) {
         if (oneHundredEventQueueService.isUserInQueue(eventId, memberId)) {
-            throw new OneHundredEventException.AlreadyInQueueException();
+            throw new AlreadyInQueueException();
         }
 
         if (oneHundredEventRepository.existsByEventIdAndMemberId(eventId, memberId)) {
-            throw new OneHundredEventException.AlreadyParticipatedException();
+            throw new AlreadyParticipatedException();
         }
     }
 
     private OneHundredEventParticipant validateParticipant(Long eventId, Long memberId) {
         OneHundredEventParticipant participant = oneHundredEventRepository
                 .findByEventIdAndMemberId(eventId, memberId)
-                .orElseThrow(OneHundredEventException.NotInPendingStateException::new);
+                .orElseThrow(NotInPendingStateException::new);
 
         if (participant.getStatus() != ParticipantStatus.PENDING) {
-            throw new OneHundredEventException.NotInPendingStateException();
+            throw new NotInPendingStateException();
         }
         return participant;
-    }
-
-    private void validateStock(Event event) {
-        if (event.getEventStock() <= 0) {
-            throw new EventStockNotEnoughException();
-        }
     }
 }

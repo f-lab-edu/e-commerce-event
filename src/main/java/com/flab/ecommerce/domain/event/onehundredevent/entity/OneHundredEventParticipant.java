@@ -1,11 +1,15 @@
 package com.flab.ecommerce.domain.event.onehundredevent.entity;
 
+import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
+import com.flab.ecommerce.domain.event.onehundredevent.exception.NotInPendingStateException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "event_participants_one_hundred")
@@ -29,9 +33,12 @@ public class OneHundredEventParticipant {
     @Column(nullable = false)
     private ParticipantStatus status;
 
+    @Column(nullable = false)
+    private LocalDateTime expiredAt;
+
     public void confirmParticipation() {
         if (this.status != ParticipantStatus.PENDING) {
-            throw new IllegalStateException("결제 대기 상태가 아닌 경우 확정할 수 없습니다.");
+            throw new NotInPendingStateException();
         }
         this.status = ParticipantStatus.CONFIRMED;
     }

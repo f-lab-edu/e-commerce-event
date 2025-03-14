@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -40,9 +41,12 @@ public class OneHundredEventPolicy extends EventPolicy {
                     .eventId(event.getId())
                     .memberId(memberId)
                     .status(ParticipantStatus.PENDING)
+                    .expiredAt(LocalDateTime.now().plusMinutes(5))
                     .build();
 
             participantRepository.save(participant);
+
+            event.decreaseEventStock();
         });
     }
 }

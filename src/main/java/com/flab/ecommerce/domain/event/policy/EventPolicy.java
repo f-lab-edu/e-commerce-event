@@ -1,5 +1,8 @@
 package com.flab.ecommerce.domain.event.policy;
 
+import org.springframework.transaction.annotation.Transactional;
+
 public abstract class EventPolicy {
-    public abstract void applyEvent();
+    @Transactional
+    public abstract void applyEvent(Long eventId);
 }

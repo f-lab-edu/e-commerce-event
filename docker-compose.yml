@@ -14,6 +14,56 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+        - ecommerce_network
+
+  redis:
+    image: redis:7.4
+    container_name: redis_server
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - ecommerce_network
+    volumes:
+      - redis_data:/data
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis_insight
+    restart: always
+    ports:
+      - "8001:8001"
+    networks:
+      - ecommerce_network
+
+  app:
+    image: openjdk:17
+    container_name: e-commerce-mall
+    restart: always
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: [ "java", "-jar", "build/libs/e-commerce-mall.jar" ]
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis_server
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      - redis
+      - db
+    networks:
+      - ecommerce_network
 
 volumes:
   db_data:
+  redis_data:
+
+networks:
+  ecommerce_network:
+    driver: bridge

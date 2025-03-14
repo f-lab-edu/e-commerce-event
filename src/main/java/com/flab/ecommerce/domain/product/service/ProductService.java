@@ -7,6 +7,8 @@ import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
 import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.entity.Product;
 import com.flab.ecommerce.domain.category.exception.CategoryNotFoundException;
+import com.flab.ecommerce.domain.product.enums.ProductStatus;
+import com.flab.ecommerce.domain.product.exception.ProductDeletedException;
 import com.flab.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.flab.ecommerce.domain.category.repository.CategoryRepository;
 import com.flab.ecommerce.domain.product.repository.ProductRepository;
@@ -22,8 +24,20 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+    public Product getProduct(long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        if (product.getStatus() == ProductStatus.DELETED) {
+            throw new ProductDeletedException();
+        }
+
+        return product;
+    }
+
+
     public List<ProductListResponseDTO> getAllProducts() {
-        return productRepository.findAll()
+        return productRepository.findByStatusNot(ProductStatus.DELETED)
                 .stream()
                 .map(ProductListResponseDTO::new)
                 .toList();
@@ -53,6 +67,7 @@ public class ProductService {
                 .price(requestDTO.getPrice())
                 .stockQuantity(requestDTO.getStockQuantity())
                 .imageUrl(requestDTO.getImageUrl())
+                .status(ProductStatus.AVAILABLE)
                 .category(category)
                 .build();
 
@@ -77,6 +92,6 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
 
-        productRepository.delete(product);
+        product.delete();
     }
 }

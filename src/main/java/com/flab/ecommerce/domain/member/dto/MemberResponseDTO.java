@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.member.dto;
 
+import com.flab.ecommerce.domain.common.Address;
 import com.flab.ecommerce.domain.member.entity.Member;
 import lombok.Getter;
 
@@ -8,10 +9,14 @@ public class MemberResponseDTO {
     private String email;
     private String name;
     private String role;
+    private String phoneNumber;
+    private Address address;
 
-    public MemberResponseDTO(Member user) {
-        this.email = user.getEmail();
-        this.name = user.getName();
-        this.role = user.getRole().name();
+    public MemberResponseDTO(Member member) {
+        this.email = member.getEmail();
+        this.name = member.getName();
+        this.role = member.getRole().name();
+        this.phoneNumber = member.getPhoneNumber();
+        this.address = member.getAddress();
     }
 }

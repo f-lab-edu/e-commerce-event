@@ -2,6 +2,8 @@ package com.flab.ecommerce.domain.product.entity;
 
 import com.flab.ecommerce.domain.category.entity.Category;
 import com.flab.ecommerce.domain.product.dto.ProductUpdateRequestDTO;
+import com.flab.ecommerce.domain.product.enums.ProductStatus;
+import com.flab.ecommerce.domain.product.exception.OutOfStockException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +43,10 @@ public class Product {
     private int stockQuantity;
     private String imageUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProductStatus status = ProductStatus.AVAILABLE;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -54,7 +60,29 @@ public class Product {
         this.description = requestDTO.getDescription();
         this.price = requestDTO.getPrice();
         this.stockQuantity = requestDTO.getStockQuantity();
+        this.status = requestDTO.getStatus();
         this.imageUrl = requestDTO.getImageUrl();
         this.category = newCategory;
+    }
+
+    public void checkStock(int requestQuantity) {
+        if (this.stockQuantity <= 0) {
+            throw new OutOfStockException(this.id, this.stockQuantity, requestQuantity);
+        }
+
+        if(this.stockQuantity < requestQuantity) {
+            throw new OutOfStockException(this.id, this.stockQuantity, requestQuantity);
+        }
+    }
+
+    public void decreaseStock(int quantity) {
+        if(this.stockQuantity < quantity) {
+            throw new OutOfStockException(this.id, this.stockQuantity, quantity);
+        }
+        this.stockQuantity -= quantity;
+    }
+
+    public void delete() {
+        this.status = ProductStatus.DELETED;
     }
 }

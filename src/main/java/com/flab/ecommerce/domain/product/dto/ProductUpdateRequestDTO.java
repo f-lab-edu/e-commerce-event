@@ -1,5 +1,6 @@
 package com.flab.ecommerce.domain.product.dto;
 
+import com.flab.ecommerce.domain.product.enums.ProductStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,9 @@ public class ProductUpdateRequestDTO {
     @NotNull(message = "상품 재고를 입력해주세요.")
     @Min(value = 0, message = "상품 재고는 0개 이상이어야 합니다.")
     private int stockQuantity;
+
+    @NotNull(message = "상품 상태를 선택해주세요.")
+    private ProductStatus status;
 
     @NotBlank(message = "상품 이미지 URL을 입력해주세요.")
     private String imageUrl;

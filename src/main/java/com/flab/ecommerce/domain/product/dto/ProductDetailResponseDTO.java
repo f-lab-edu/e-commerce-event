@@ -1,6 +1,7 @@
 package com.flab.ecommerce.domain.product.dto;
 
 import com.flab.ecommerce.domain.product.entity.Product;
+import com.flab.ecommerce.domain.product.enums.ProductStatus;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ public class ProductDetailResponseDTO {
     private int stockQuantity;
     private String imageUrl;
     private Long categoryId;
+    private ProductStatus status;
 
     public ProductDetailResponseDTO(Product product) {
         this.id = product.getId();
@@ -21,6 +23,7 @@ public class ProductDetailResponseDTO {
         this.description = product.getDescription();
         this.price = product.getPrice();
         this.stockQuantity = product.getStockQuantity();
+        this.status = product.getStatus();
         this.imageUrl = product.getImageUrl();
         this.categoryId = product.getCategory().getId();
     }

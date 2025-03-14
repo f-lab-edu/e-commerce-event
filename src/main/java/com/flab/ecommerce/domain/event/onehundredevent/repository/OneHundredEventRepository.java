@@ -1,6 +1,7 @@
 package com.flab.ecommerce.domain.event.onehundredevent.repository;
 
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
+import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,4 +20,6 @@ public interface OneHundredEventRepository extends JpaRepository<OneHundredEvent
     List<OneHundredEventParticipant> findExpiredParticipants(LocalDateTime now);
 
     long countByEventId(Long eventId);
+
+    long countByEventIdAndStatus(Long eventId, ParticipantStatus participantStatus);
 }

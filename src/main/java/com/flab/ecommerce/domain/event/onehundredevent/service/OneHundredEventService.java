@@ -4,6 +4,7 @@ import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventTypeException;
+import com.flab.ecommerce.domain.event.onehundredevent.dto.EventLogResponseDTO;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.exception.AlreadyInQueueException;
@@ -66,6 +67,15 @@ public class OneHundredEventService {
 
             log.info("[스케줄러 완료] 만료된 참가자 취소 완료");
         }
+    }
+
+    public EventLogResponseDTO getEventLogs(Long eventId) {
+        long totalParticipants = oneHundredEventRepository.countByEventId(eventId);
+        long confirmedParticipants = oneHundredEventRepository.countByEventIdAndStatus(eventId, ParticipantStatus.CONFIRMED);
+        long pendingParticipants = oneHundredEventRepository.countByEventIdAndStatus(eventId, ParticipantStatus.PENDING);
+        long canceledParticipants = oneHundredEventRepository.countByEventIdAndStatus(eventId, ParticipantStatus.CANCELED);
+
+        return new EventLogResponseDTO(eventId, totalParticipants, confirmedParticipants, pendingParticipants, canceledParticipants);
     }
 
     private void validateEvent(Long eventId) {

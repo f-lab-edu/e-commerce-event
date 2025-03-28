@@ -1,25 +1,31 @@
-package com.flab.ecommerce.domain.event.onehundredevent.service;
+package com.flab.ecommerce.domain.event.queue;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class OneHundredEventQueueService {
+public class RedisEventQueue implements EventQueue {
 
     private final RedisTemplate<String, String> redisTemplate;
     private static final String QUEUE_PREFIX = "queue:one_hundred_event:";
 
-    public void addToQueue(Long eventId, Long memberId) {
+    public boolean addToQueue(Long eventId, Long memberId) {
+
+        if (isUserInQueue(eventId, memberId)) {
+            return false;
+        }
+
         String queueKey = QUEUE_PREFIX + eventId;
         redisTemplate.opsForList().leftPush(queueKey, String.valueOf(memberId));
         redisTemplate.persist(queueKey);
         redisTemplate.expire(queueKey, Duration.ofMinutes(5));
+        return true;
     }
 
     public Optional<Long> popFromQueue(Long eventId) {
@@ -28,9 +34,9 @@ public class OneHundredEventQueueService {
         return Optional.ofNullable(userId).map(Long::parseLong);
     }
 
-    public Long getQueueSize(Long eventId) {
+    public int getQueueSize(Long eventId) {
         String queueKey = QUEUE_PREFIX + eventId;
-        return redisTemplate.opsForList().size(queueKey);
+        return Optional.ofNullable(redisTemplate.opsForList().size(queueKey)).orElse(0L).intValue();
     }
 
     public void removeUserFromQueue(Long eventId, Long memberId) {

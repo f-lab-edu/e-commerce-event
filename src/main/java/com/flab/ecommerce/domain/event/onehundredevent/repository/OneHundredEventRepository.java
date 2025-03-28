@@ -22,4 +22,6 @@ public interface OneHundredEventRepository extends JpaRepository<OneHundredEvent
     long countByEventId(Long eventId);
 
     long countByEventIdAndStatus(Long eventId, ParticipantStatus participantStatus);
+
+    List<OneHundredEventParticipant> findByEventId(Long eventId);
 }

@@ -3,6 +3,8 @@ package com.flab.ecommerce.domain.event.entity;
 import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
+import com.flab.ecommerce.domain.event.exception.EventAlreadyEndedException;
+import com.flab.ecommerce.domain.event.exception.EventNotYetStartedException;
 import com.flab.ecommerce.domain.event.exception.EventStockNotEnoughException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,7 +54,7 @@ public class Event {
     private EventStatus status;
 
     @Column(nullable = false)
-    private int maxParticipant;
+    private int maxParticipants;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -87,6 +89,25 @@ public class Event {
     }
 
     public long getMaxParticipants() {
-        return this.maxParticipant;
+        return this.maxParticipants;
     }
+
+    public boolean isStarted() {
+        return this.startDate.isBefore(LocalDateTime.now());
+    }
+
+    public boolean isEnded() {
+        return this.endDate.isBefore(LocalDateTime.now());
+    }
+
+    public void validateAvailablePeriod() {
+        LocalDateTime now = LocalDateTime.now();
+        if (startDate.isAfter(now)) {
+            throw new EventNotYetStartedException();
+        }
+        if (endDate.isBefore(now)) {
+            throw new EventAlreadyEndedException();
+        }
+    }
+
 }

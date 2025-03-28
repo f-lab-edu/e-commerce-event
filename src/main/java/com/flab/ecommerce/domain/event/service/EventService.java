@@ -51,7 +51,7 @@ public class EventService {
                 .startDate(requestDTO.getStartDate())
                 .endDate(requestDTO.getEndDate())
                 .eventStock(requestDTO.getEventStock())
-                .maxParticipant(requestDTO.getMaxParticipant())
+                .maxParticipants(requestDTO.getMaxParticipant())
                 .status(EventStatus.READY)
                 .build();
 

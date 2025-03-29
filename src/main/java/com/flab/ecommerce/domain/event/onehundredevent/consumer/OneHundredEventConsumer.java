@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
@@ -19,6 +21,7 @@ public class OneHundredEventConsumer {
     private final EventRepository eventRepository;
     private final EventQueue eventQueue;
     private final EventPolicy eventPolicy;
+    private final ExecutorService executor = Executors.newFixedThreadPool(20);
 
     @Scheduled(fixedRate = 1000)
     public void consumeQueue() {
@@ -27,22 +30,23 @@ public class OneHundredEventConsumer {
         List<Long> activeEventIds = eventRepository.findActiveOneHundredEventIds();
 
         for (Long eventId : activeEventIds) {
-            Optional<Long> memberIdOpt = eventQueue.popFromQueue(eventId);
+            executor.submit(() -> {
+                while (true) {
+                    Optional<Long> memberIdOpt = eventQueue.popFromQueue(eventId);
+                    if (memberIdOpt.isEmpty()) break;
 
-            memberIdOpt.ifPresent(memberId -> {
-                log.info("[Queue Consumer] 이벤트 처리 중 - 이벤트 ID: {}, 유저 ID: {}", eventId, memberId);
-                try {
-                    eventPolicy.applyEvent(eventId, memberId);
-                } catch (Exception e) {
-                    log.error("[Queue Consumer] 이벤트 처리 중 오류 발생 - 이벤트 ID: {}, 유저 ID: {}, 오류: {}", eventId, memberId, e.getMessage());
+                    Long memberId = memberIdOpt.get();
+                    try {
+                        eventPolicy.applyEvent(eventId, memberId);
+                        log.info("[Queue Consumer] 처리 완료 - 이벤트 ID: {}, 유저 ID: {}", eventId, memberId);
+                    } catch (Exception e) {
+                        log.error("[Queue Consumer] 처리 실패 - 이벤트 ID: {}, 유저 ID: {}, 오류: {}", eventId, memberId, e.getMessage());
+                    }
                 }
             });
-
-            if (memberIdOpt.isEmpty()) {
-                log.info("[consumeQueue] 이벤트 ID: {}에 대한 큐에 처리할 이벤트가 없습니다.", eventId);
-            }
         }
     }
 }
+
 
 

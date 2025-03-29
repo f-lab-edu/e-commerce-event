@@ -5,7 +5,6 @@ import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.EventAlreadyEndedException;
 import com.flab.ecommerce.domain.event.exception.EventNotYetStartedException;
-import com.flab.ecommerce.domain.event.exception.EventStockNotEnoughException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,9 +45,6 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime endDate;
 
-    @Column(nullable = false)
-    private int eventStock;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EventStatus status;
@@ -74,18 +70,6 @@ public class Event {
 
     public void changeStatus(EventStatus status) {
         this.status = status;
-    }
-
-    public void decreaseEventStock() {
-        if (this.eventStock > 0) {
-            this.eventStock--;
-        } else {
-            throw new EventStockNotEnoughException();
-        }
-    }
-
-    public void restoreEventStock() {
-        this.eventStock++;
     }
 
     public long getMaxParticipants() {

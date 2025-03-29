@@ -2,13 +2,12 @@ package com.flab.ecommerce.domain.event.onehundredevent.policy;
 
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
-import com.flab.ecommerce.domain.event.exception.EventStockNotEnoughException;
 import com.flab.ecommerce.domain.event.exception.MaxParticipantsExceededException;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
-import com.flab.ecommerce.domain.event.queue.EventQueue;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,24 +21,22 @@ import java.time.LocalDateTime;
 @Slf4j
 public class OneHundredEventPolicy extends EventPolicy {
 
-    private final EventQueue eventQueue;
     private final OneHundredEventRepository participantRepository;
     private final EventRepository eventRepository;
+    private final OneHundredEventCounter participantCounter;
+
 
     @Override
     @Transactional
     public void applyEvent(Long eventId, Long memberId) {
 
         Event event = eventRepository.findById(eventId)
+        //Event event = eventRepository.findWithPessimisticLockById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-        long currentParticipants = participantRepository.countByEventId(eventId);
-        if (currentParticipants >= event.getMaxParticipants()) {
+        boolean success = participantCounter.increase(eventId, event.getMaxParticipants());
+        if(!success) {
             throw new MaxParticipantsExceededException();
-        }
-
-        if (event.getEventStock() <= 0) {
-            throw new EventStockNotEnoughException();
         }
 
         OneHundredEventParticipant participant = OneHundredEventParticipant.builder()
@@ -50,7 +47,6 @@ public class OneHundredEventPolicy extends EventPolicy {
                 .build();
 
         participantRepository.save(participant);
-        event.decreaseEventStock();
 
     }
 }

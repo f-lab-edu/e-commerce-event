@@ -5,6 +5,7 @@ import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.AlreadyParticipatedException;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventTypeException;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.dto.EventLogResponseDTO;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
@@ -31,6 +32,8 @@ public class OneHundredEventService {
     private final EventRepository eventRepository;
     private final OneHundredEventRepository oneHundredEventRepository;
     private final EventQueue eventQueue;
+    private final OneHundredEventCounter oneHundredEventCounter;
+
 
     @Transactional
     public void addToQueue(Long eventId, Long memberId) {
@@ -68,14 +71,11 @@ public class OneHundredEventService {
         for (OneHundredEventParticipant participant : expiredParticipants) {
             log.info("[참가 취소] 이벤트 ID: {}, 유저 ID: {}", participant.getEventId(), participant.getMemberId());
 
-            Event event = eventRepository.findById(participant.getEventId())
-                    .orElseThrow(EventNotFoundException::new);
-
             participant.cancelParticipation();
-            event.restoreEventStock();
             oneHundredEventRepository.save(participant);
             eventQueue.removeUserFromQueue(participant.getEventId(), participant.getMemberId());
 
+            oneHundredEventCounter.decrease(participant.getEventId());
             log.info("[스케줄러 완료] 만료된 참가자 취소 완료");
         }
     }

@@ -3,11 +3,13 @@ package com.flab.ecommerce.domain.event.onehundredevent.service;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.queue.EventQueue;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.task.scheduling.enabled=false")
 @ActiveProfiles("dev")
 @AutoConfigureMockMvc
 //@Transactional
@@ -40,6 +42,16 @@ class OneHundredEventIntegrationTest {
     private EventQueue eventQueue;
     @Autowired
     private EventPolicy eventPolicy;
+    @Autowired
+    private OneHundredEventCounter oneHundredEventCounter;
+
+    @BeforeEach
+    void clearInMemoryData() {
+        participantRepository.deleteAll();
+        eventRepository.deleteAll();
+        eventQueue.clearAll();             // 큐 초기화
+        oneHundredEventCounter.reset();    // 카운터 초기화
+    }
 
     @Test
     @DisplayName("100원 이벤트 - 큐 등록부터 정책 처리까지 전체 흐름 테스트")
@@ -93,7 +105,8 @@ class OneHundredEventIntegrationTest {
         Long eventId = event.getId();
 
         int totalUsers = 3000;
-        ExecutorService executor = Executors.newFixedThreadPool(100);
+        int coreCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
         CountDownLatch latch = new CountDownLatch(totalUsers);
 
         for (long i = 1; i <= totalUsers; i++) {
@@ -114,7 +127,7 @@ class OneHundredEventIntegrationTest {
 
         long consumeStart = System.currentTimeMillis();
         int queueSize = eventQueue.getQueueSize(eventId);
-        ExecutorService applyExecutor = Executors.newFixedThreadPool(100);
+        ExecutorService applyExecutor = Executors.newFixedThreadPool(coreCount * 2);
         CountDownLatch applyLatch = new CountDownLatch(queueSize);
 
         for (int i = 0; i < queueSize; i++) {
@@ -182,7 +195,8 @@ class OneHundredEventIntegrationTest {
                 .build());
 
         int totalUsersPerEvent = 3000;
-        ExecutorService executor = Executors.newFixedThreadPool(100);
+        int coreCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
         CountDownLatch latch = new CountDownLatch(totalUsersPerEvent * 2);
 
         // 큐 등록
@@ -213,7 +227,7 @@ class OneHundredEventIntegrationTest {
 
         // 컨슈머 처리 시작
         long consumeStart = System.currentTimeMillis();
-        ExecutorService applyExecutor = Executors.newFixedThreadPool(100);
+        ExecutorService applyExecutor = Executors.newFixedThreadPool(coreCount * 2);
         CountDownLatch applyLatch = new CountDownLatch(2000);
 
         for (Long eventId : List.of(event1.getId(), event2.getId())) {

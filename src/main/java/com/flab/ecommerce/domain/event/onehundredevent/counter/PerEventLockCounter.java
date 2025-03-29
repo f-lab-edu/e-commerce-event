@@ -47,4 +47,9 @@ public class PerEventLockCounter implements EventCounter {
             counterMap.remove(eventId);
         }
     }
+
+    @Override
+    public void reset() {
+        counterMap.clear();
+    }
 }

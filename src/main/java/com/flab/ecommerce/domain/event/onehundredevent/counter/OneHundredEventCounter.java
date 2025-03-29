@@ -3,37 +3,53 @@ package com.flab.ecommerce.domain.event.onehundredevent.counter;
 import com.flab.ecommerce.domain.event.counter.EventCounter;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class OneHundredEventCounter implements EventCounter {
-    private final Map<Long, AtomicInteger> counterMap = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> counterMap = new HashMap<>();
+    private final Map<Long, Object> lockMap = new HashMap<>();
+
+    private Object getLock(Long eventId) {
+        synchronized (lockMap) {
+            return lockMap.computeIfAbsent(eventId, id -> new Object());
+        }
+    }
 
     @Override
     public boolean increase(Long eventId, long maxParticipants) {
-        AtomicInteger counter = counterMap.computeIfAbsent(eventId, id -> new AtomicInteger(0));
-        while (true) {
-            int current = counter.get();
-            if (current >= maxParticipants) return false;
-            if (counter.compareAndSet(current, current + 1)) return true;
+        synchronized (getLock(eventId)) {
+            int count = counterMap.getOrDefault(eventId, 0);
+            if (count >= maxParticipants) return false;
+            counterMap.put(eventId, count + 1);
+            return true;
         }
     }
 
     @Override
     public void decrease(Long eventId) {
-        AtomicInteger counter = counterMap.computeIfAbsent(eventId, id -> new AtomicInteger(0));
-        counter.updateAndGet(c -> Math.max(c - 1, 0));
+        synchronized (getLock(eventId)) {
+            int count = counterMap.getOrDefault(eventId, 0);
+            counterMap.put(eventId, Math.max(count - 1, 0));
+        }
     }
 
     @Override
     public long getCount(Long eventId) {
-        return counterMap.getOrDefault(eventId, new AtomicInteger(0)).get();
+        synchronized (getLock(eventId)) {
+            return counterMap.getOrDefault(eventId, 0);
+        }
     }
 
     @Override
     public void reset(Long eventId) {
-        counterMap.remove(eventId);
+        synchronized (getLock(eventId)) {
+            counterMap.remove(eventId);
+        }
+    }
+
+    public void reset() {
+        counterMap.clear();
     }
 }

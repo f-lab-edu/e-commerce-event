@@ -42,4 +42,8 @@ public class InMemoryEventQueue implements EventQueue {
             queue.remove(memberId);
         }
     }
+    @Override
+    public synchronized void clearAll() {
+        eventQueueMap.clear();
+    }
 }

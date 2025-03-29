@@ -5,4 +5,5 @@ public interface EventCounter {
     void decrease(Long eventId);
     long getCount(Long eventId);
     void reset(Long eventId);
+    void reset();
 }

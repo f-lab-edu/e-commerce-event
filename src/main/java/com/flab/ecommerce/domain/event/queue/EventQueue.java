@@ -8,4 +8,5 @@ public interface EventQueue {
     int getQueueSize(Long eventId);
     boolean isUserInQueue(Long eventId, Long memberId);
     void removeUserFromQueue(Long eventId, Long memberId);
+    void clearAll();
 }

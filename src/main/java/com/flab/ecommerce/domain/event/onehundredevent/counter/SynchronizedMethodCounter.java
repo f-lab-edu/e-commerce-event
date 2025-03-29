@@ -31,4 +31,9 @@ public class SynchronizedMethodCounter implements EventCounter {
     public synchronized void reset(Long eventId) {
         counterMap.remove(eventId);
     }
+
+    @Override
+    public void reset() {
+        counterMap.clear();
+    }
 }

@@ -21,7 +21,8 @@ public class OneHundredEventConsumer {
     private final EventRepository eventRepository;
     private final EventQueue eventQueue;
     private final EventPolicy eventPolicy;
-    private final ExecutorService executor = Executors.newFixedThreadPool(20);
+    int coreCount = Runtime.getRuntime().availableProcessors();
+    private final ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
 
     @Scheduled(fixedRate = 1000)
     public void consumeQueue() {

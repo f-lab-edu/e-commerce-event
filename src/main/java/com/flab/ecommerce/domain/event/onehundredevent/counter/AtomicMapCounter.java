@@ -35,6 +35,11 @@ public class AtomicMapCounter implements EventCounter {
     public void reset(Long eventId) {
         counterMap.remove(eventId);
     }
+
+    @Override
+    public void reset() {
+        counterMap.clear();
+    }
 }
 
 

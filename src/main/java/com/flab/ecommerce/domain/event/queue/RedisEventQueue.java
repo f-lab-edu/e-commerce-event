@@ -44,6 +44,11 @@ public class RedisEventQueue implements EventQueue {
         redisTemplate.opsForList().remove(queueKey, 1, String.valueOf(memberId));
     }
 
+    @Override
+    public void clearAll() {
+
+    }
+
     public boolean isUserInQueue(Long eventId, Long memberId) {
         String queueKey = QUEUE_PREFIX + eventId;
 

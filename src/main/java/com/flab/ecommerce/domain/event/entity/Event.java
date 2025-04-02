@@ -3,7 +3,8 @@ package com.flab.ecommerce.domain.event.entity;
 import com.flab.ecommerce.domain.event.dto.EventUpdateRequestDTO;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
-import com.flab.ecommerce.domain.event.exception.EventStockNotEnoughException;
+import com.flab.ecommerce.domain.event.exception.EventAlreadyEndedException;
+import com.flab.ecommerce.domain.event.exception.EventNotYetStartedException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,15 +45,12 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime endDate;
 
-    @Column(nullable = false)
-    private int eventStock;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EventStatus status;
 
     @Column(nullable = false)
-    private int maxParticipant;
+    private int maxParticipants;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -74,19 +72,26 @@ public class Event {
         this.status = status;
     }
 
-    public void decreaseEventStock() {
-        if (this.eventStock > 0) {
-            this.eventStock--;
-        } else {
-            throw new EventStockNotEnoughException();
+    public long getMaxParticipants() {
+        return this.maxParticipants;
+    }
+
+    public boolean isStarted() {
+        return this.startDate.isBefore(LocalDateTime.now());
+    }
+
+    public boolean isEnded() {
+        return this.endDate.isBefore(LocalDateTime.now());
+    }
+
+    public void validateAvailablePeriod() {
+        LocalDateTime now = LocalDateTime.now();
+        if (startDate.isAfter(now)) {
+            throw new EventNotYetStartedException();
+        }
+        if (endDate.isBefore(now)) {
+            throw new EventAlreadyEndedException();
         }
     }
 
-    public void restoreEventStock() {
-        this.eventStock++;
-    }
-
-    public long getMaxParticipants() {
-        return this.maxParticipant;
-    }
 }

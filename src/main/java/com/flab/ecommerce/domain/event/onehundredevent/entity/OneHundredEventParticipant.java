@@ -1,6 +1,5 @@
 package com.flab.ecommerce.domain.event.onehundredevent.entity;
 
-import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.exception.NotInPendingStateException;
 import jakarta.persistence.*;

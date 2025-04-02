@@ -1,6 +1,7 @@
 package com.flab.ecommerce.domain.event.queue;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface EventQueue {
     boolean addToQueue(Long eventId, Long memberId);
@@ -9,4 +10,5 @@ public interface EventQueue {
     boolean isUserInQueue(Long eventId, Long memberId);
     void removeUserFromQueue(Long eventId, Long memberId);
     void clearAll();
+    Set<Long> getRegisteredEventIds();
 }

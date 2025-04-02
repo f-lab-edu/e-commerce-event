@@ -46,4 +46,9 @@ public class InMemoryEventQueue implements EventQueue {
     public synchronized void clearAll() {
         eventQueueMap.clear();
     }
+
+    @Override
+    public synchronized Set<Long> getRegisteredEventIds() {
+        return new HashSet<>(eventQueueMap.keySet());
+    }
 }

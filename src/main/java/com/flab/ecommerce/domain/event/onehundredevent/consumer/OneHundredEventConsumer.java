@@ -43,11 +43,13 @@ public class OneHundredEventConsumer {
             try {
                 while (true) {
                     Optional<Long> memberIdOpt = eventQueue.popFromQueue(eventidToProcess);
+                    log.info("큐에서 꺼낸 멤버: {}", memberIdOpt.orElse(null));
                     if (memberIdOpt.isEmpty()) break;
                     eventPolicy.applyEvent(eventidToProcess, memberIdOpt.get());
                 }
             } finally {
                 processingFlags.put(eventidToProcess, false);
+                log.info("[consumeQueue] 종료됨");
             }
         });
     }

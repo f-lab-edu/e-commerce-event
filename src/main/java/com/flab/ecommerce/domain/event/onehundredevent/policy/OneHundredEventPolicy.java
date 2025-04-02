@@ -31,7 +31,6 @@ public class OneHundredEventPolicy extends EventPolicy {
     public void applyEvent(Long eventId, Long memberId) {
 
         Event event = eventRepository.findById(eventId)
-        //Event event = eventRepository.findWithPessimisticLockById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
         boolean success = participantCounter.increase(eventId, event.getMaxParticipants());

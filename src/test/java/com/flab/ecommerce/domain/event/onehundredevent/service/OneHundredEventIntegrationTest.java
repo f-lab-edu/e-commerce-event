@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -96,7 +95,7 @@ class OneHundredEventIntegrationTest {
                 .type(EventType.ONE_HUNDRED_WON_DEAL)
                 .startDate(LocalDateTime.now().minusMinutes(1))
                 .endDate(LocalDateTime.now().plusMinutes(10))
-                .maxParticipants(1000)
+                .maxParticipants(2000)
                 .status(EventStatus.ACTIVE)
                 .name("100원 DEAL")
                 .description("동시 참가 1000")
@@ -114,8 +113,6 @@ class OneHundredEventIntegrationTest {
             executor.submit(() -> {
                 try {
                     oneHundredEventService.addToQueue(eventId, memberId);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 } finally {
                     latch.countDown();
                 }
@@ -164,6 +161,7 @@ class OneHundredEventIntegrationTest {
         double tps = totalParticipants / (duration / 1000.0);
 
         System.out.println("전체 소요 시간: " + (totalEnd - totalStart) + "ms");
+        System.out.println("컨슈머 처리 시간: " + duration + "ms");
         System.out.println("TPS (초당 처리량): " + String.format("%.2f", tps) + "건/초");
     }
 
@@ -178,7 +176,7 @@ class OneHundredEventIntegrationTest {
                 .type(EventType.ONE_HUNDRED_WON_DEAL)
                 .startDate(LocalDateTime.now().minusMinutes(1))
                 .endDate(LocalDateTime.now().plusMinutes(10))
-                .maxParticipants(1000)
+                .maxParticipants(2000)
                 .status(EventStatus.ACTIVE)
                 .name("이벤트 1")
                 .description("첫 번째 이벤트")
@@ -188,7 +186,7 @@ class OneHundredEventIntegrationTest {
                 .type(EventType.ONE_HUNDRED_WON_DEAL)
                 .startDate(LocalDateTime.now().minusMinutes(1))
                 .endDate(LocalDateTime.now().plusMinutes(10))
-                .maxParticipants(1000)
+                .maxParticipants(2000)
                 .status(EventStatus.ACTIVE)
                 .name("이벤트 2")
                 .description("두 번째 이벤트")
@@ -206,7 +204,6 @@ class OneHundredEventIntegrationTest {
             executor.submit(() -> {
                 try {
                     oneHundredEventService.addToQueue(event1.getId(), memberId1);
-                } catch (Exception ignored) {
                 } finally {
                     latch.countDown();
                 }
@@ -215,12 +212,12 @@ class OneHundredEventIntegrationTest {
             executor.submit(() -> {
                 try {
                     oneHundredEventService.addToQueue(event2.getId(), memberId2);
-                } catch (Exception ignored) {
                 } finally {
                     latch.countDown();
                 }
             });
         }
+
 
         latch.await();
         executor.shutdown();
@@ -228,31 +225,26 @@ class OneHundredEventIntegrationTest {
         // 컨슈머 처리 시작
         long consumeStart = System.currentTimeMillis();
         ExecutorService applyExecutor = Executors.newFixedThreadPool(coreCount * 2);
-        CountDownLatch applyLatch = new CountDownLatch(2000);
+        CountDownLatch applyLatch = new CountDownLatch(totalUsersPerEvent * 2);
 
-        for (Long eventId : List.of(event1.getId(), event2.getId())) {
-            int queueSize = eventQueue.getQueueSize(eventId);
-            for (int i = 0; i < queueSize; i++) {
-                Long memberId = eventQueue.popFromQueue(eventId).orElse(null);
-                if (memberId != null) {
-                    applyExecutor.submit(() -> {
-                        try {
-                            eventPolicy.applyEvent(eventId, memberId);
-                        } catch (Exception e) {
-                            System.out.println("이벤트 적용 실패: " + e.getMessage());
-                        } finally {
-                            applyLatch.countDown();
-                        }
-                    });
-                } else {
-                    applyLatch.countDown();
-                }
+        for (int i = 0; i < totalUsersPerEvent * 2; i++) {
+            Long eventId =  i % 2 == 0 ? event1.getId() : event2.getId();
+            Long memberId = eventQueue.popFromQueue(eventId).orElse(null);
+            if (memberId != null) {
+                applyExecutor.submit(() -> {
+                    try {
+                        eventPolicy.applyEvent(eventId, memberId);
+                    } finally {
+                        applyLatch.countDown();
+                    }
+                });
+            } else {
+                applyLatch.countDown();
             }
         }
 
         applyLatch.await();
         applyExecutor.shutdown();
-        applyExecutor.awaitTermination(60, TimeUnit.SECONDS);
 
         long consumeEnd = System.currentTimeMillis();
         long totalEnd = System.currentTimeMillis();

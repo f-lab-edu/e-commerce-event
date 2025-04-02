@@ -13,11 +13,9 @@ public class AtomicMapCounter implements EventCounter {
     @Override
     public boolean increase(Long eventId, long maxParticipants) {
         AtomicInteger counter = counterMap.computeIfAbsent(eventId, id -> new AtomicInteger(0));
-        while (true) {
-            int current = counter.get();
-            if (current >= maxParticipants) return false;
-            if (counter.compareAndSet(current, current + 1)) return true;
-        }
+        if (counter.get() >= maxParticipants) return false;
+        counter.incrementAndGet();
+        return true;
     }
 
     @Override

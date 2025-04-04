@@ -8,8 +8,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Comparator;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,34 +23,37 @@ public class OneHundredEventConsumer {
     private final EventPolicy eventPolicy;
     int coreCount = Runtime.getRuntime().availableProcessors();
     private final ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
-    private final Map<Long, Boolean> processingFlags = new ConcurrentHashMap<>();
+    private static final int MAX_PROCESS_PER_THREAD = 20;
 
     @Async
     @Scheduled(fixedRate = 1000)
     public void consumeQueue() {
         log.info("[consumeQueue] 실행됨");
 
-        Set<Long> eventIds = eventQueue.getRegisteredEventIds();
+        for(int i =0; i< coreCount; i++) {
+            executor.submit(() -> {
+                Set<Long> eventIds = eventQueue.getRegisteredEventIds();
+                Long eventId = pickEventId(eventIds);
+                if(eventId == null) return;
 
-        Long eventidToProcess = pickEventId(eventIds);
-        if (eventidToProcess == null) return;
-
-        Boolean previous = processingFlags.putIfAbsent(eventidToProcess, true);
-        if (previous != null && previous) return;
-
-        executor.submit(() -> {
-            try {
-                while (true) {
-                    Optional<Long> memberIdOpt = eventQueue.popFromQueue(eventidToProcess);
-                    log.info("큐에서 꺼낸 멤버: {}", memberIdOpt.orElse(null));
+                int processed = 0;
+                while (processed < MAX_PROCESS_PER_THREAD) {
+                    Optional<Long> memberIdOpt = eventQueue.popFromQueue(eventId);
                     if (memberIdOpt.isEmpty()) break;
-                    eventPolicy.applyEvent(eventidToProcess, memberIdOpt.get());
+
+                    Long memberId = memberIdOpt.get();
+                    try {
+                        eventPolicy.applyEvent(eventId, memberId);
+                        processed++;
+                        log.info("이벤트 처리 완료 - 이벤트 ID: {}, 유저 ID: {}", eventId, memberId);
+                    } catch (Exception e) {
+                        log.error("이벤트 처리 실패 - 이벤트 ID: {}, 유저 ID: {}, 에러: {}", eventId, memberId, e.getMessage());
+                    }
                 }
-            } finally {
-                processingFlags.put(eventidToProcess, false);
-                log.info("[consumeQueue] 종료됨");
-            }
-        });
+
+                log.info("[Worker] 처리 종료 - 이벤트 ID: {}, 처리 수: {}", eventId, processed);
+            });
+        }
     }
 
 

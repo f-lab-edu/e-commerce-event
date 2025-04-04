@@ -34,10 +34,8 @@ public class OneHundredEventConsumer {
         Long eventidToProcess = pickEventId(eventIds);
         if (eventidToProcess == null) return;
 
-        boolean isProcessing = processingFlags.getOrDefault(eventidToProcess, false);
-        if(isProcessing) return;
-
-        processingFlags.put(eventidToProcess, true);
+        Boolean previous = processingFlags.putIfAbsent(eventidToProcess, true);
+        if (previous != null && previous) return;
 
         executor.submit(() -> {
             try {

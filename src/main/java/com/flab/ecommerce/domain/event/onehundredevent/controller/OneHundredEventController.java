@@ -22,11 +22,19 @@ public class OneHundredEventController {
     private final OneHundredEventService oneHundredEventService;
     private final LoginMemberProvider loginMemberProvider;
 
-    @Operation(summary = "100원 이벤트 참가 신청", description = "사용자가 100원 이벤트에 참가 신청하여 대기열에 추가됩니다.")
+   /* @Operation(summary = "100원 이벤트 참가 신청", description = "사용자가 100원 이벤트에 참가 신청하여 대기열에 추가됩니다.")
     @PostMapping("/queue")
     public ResponseEntity<ApiResponse<String>> participate(
             @PathVariable Long eventId, Principal principal) {
         Long memberId = loginMemberProvider.getLoginMemberId(principal);
+        oneHundredEventService.addToQueue(eventId, memberId);
+        return ResponseEntity.ok(ApiResponse.success("참가 신청이 완료되었습니다."));
+    }*/
+
+    @PostMapping("/queuetest")
+    public ResponseEntity<ApiResponse<String>> participatetest(
+            @PathVariable Long eventId,
+            @RequestParam Long memberId) {
         oneHundredEventService.addToQueue(eventId, memberId);
         return ResponseEntity.ok(ApiResponse.success("참가 신청이 완료되었습니다."));
     }

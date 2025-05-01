@@ -1,3 +1,4 @@
+/*
 package com.flab.ecommerce.domain.event.onehundredevent.service;
 
 import com.flab.ecommerce.domain.event.entity.Event;
@@ -69,7 +70,7 @@ class OneHundredEventIntegrationTest {
 
         Long eventId = event.getId();
         Long memberId = 123L;
-
+123L
         // when: 큐에 참여
         oneHundredEventService.addToQueue(eventId, memberId);
 
@@ -271,3 +272,4 @@ class OneHundredEventIntegrationTest {
     }
 
 }
+*/

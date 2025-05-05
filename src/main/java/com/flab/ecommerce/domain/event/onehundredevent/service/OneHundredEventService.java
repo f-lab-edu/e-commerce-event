@@ -2,7 +2,6 @@ package com.flab.ecommerce.domain.event.onehundredevent.service;
 
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventType;
-import com.flab.ecommerce.domain.event.exception.AlreadyParticipatedException;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventTypeException;
 import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
@@ -37,11 +36,11 @@ public class OneHundredEventService {
 
     @Transactional
     public void addToQueue(Long eventId, Long memberId) {
-        log.info("[addToQueue] 실행 스레드: {}", Thread.currentThread().getName());
+
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-        if(event.getType() != EventType.ONE_HUNDRED_WON_DEAL) {
+        if (event.getType() != EventType.ONE_HUNDRED_WON_DEAL) {
             throw new InvalidEventTypeException();
         }
 
@@ -51,9 +50,6 @@ public class OneHundredEventService {
             throw new AlreadyInQueueException();
         }
 
-        if (oneHundredEventRepository.existsByEventIdAndMemberId(eventId, memberId)) {
-            throw new AlreadyParticipatedException();
-        }
         eventQueue.addToQueue(eventId, memberId);
     }
 

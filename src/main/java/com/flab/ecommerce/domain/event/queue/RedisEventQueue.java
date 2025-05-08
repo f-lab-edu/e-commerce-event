@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -47,6 +48,11 @@ public class RedisEventQueue implements EventQueue {
     @Override
     public void clearAll() {
 
+    }
+
+    @Override
+    public Set<Long> getRegisteredEventIds() {
+        return null;
     }
 
     public boolean isUserInQueue(Long eventId, Long memberId) {

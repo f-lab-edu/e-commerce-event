@@ -1,21 +1,54 @@
-version: '3.8'
 services:
+  app:
+    build:
+      context: .
+    container_name: e-commerce-mall
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis_server
+      SPRING_REDIS_PORT: 6379
+      TZ: Asia/Seoul
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce_network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+
   db:
     image: mysql:8.0
     platform: linux/amd64
     container_name: mysql_db
     restart: always
+    command: --local-infile=1
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     networks:
-        - ecommerce_network
+      - ecommerce_network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7.4
@@ -23,11 +56,16 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
     networks:
       - ecommerce_network
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis-insight:
     image: redislabs/redisinsight:latest
@@ -38,31 +76,174 @@ services:
     networks:
       - ecommerce_network
 
-  app:
-    image: openjdk:17
-    container_name: e-commerce-mall
+  ngrinder-controller:
+    image: ngrinder/controller
+    container_name: ngrinder-controller
+    platform: linux/amd64
     restart: always
-    volumes:
-      - ./:/app
-    working_dir: /app
-    command: [ "java", "-jar", "build/libs/e-commerce-mall.jar" ]
     ports:
-      - "8080:8080"
+      - "8081:80"   # 외부에서는 8081로 접속
+      - "16001:16001"
+      - "12000-12100:12000-12100"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_REDIS_HOST: redis_server
-      SPRING_REDIS_PORT: 6379
-    depends_on:
-      - redis
-      - db
+      TZ: Asia/Seoul
+      JAVA_OPTS: "-Xms1024m -Xmx1024m -Dserver.port=80 -Dcontroller.port=16010 -Dngrinder.controller.ip=ngrinder-controller"
+    networks:
+      - ecommerce_network
+    healthcheck:
+      test: [ "CMD", "curl", "-fs", "http://localhost:80/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+    volumes:
+      - ngrinder_data:/opt/ngrinder-controller
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8082:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: always
+    networks:
+      - ecommerce_network
+
+#  ngrinder-agent-1:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-1
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: ["/bin/sh", "/scripts/run.sh", "ngrinder-controller"]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+#
+#  ngrinder-agent-2:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-2
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+#
+#  ngrinder-agent-3:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-3
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      - ngrinder_data:/opt/ngrinder-controller
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+#
+#  ngrinder-agent-4:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-4
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - ecommerce_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     networks:
       - ecommerce_network
 
 volumes:
   db_data:
   redis_data:
+  ngrinder_data:
+  grafana_data:
 
 networks:
   ecommerce_network:

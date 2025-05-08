@@ -13,12 +13,14 @@ import com.flab.ecommerce.domain.event.onehundredevent.exception.NotInPendingSta
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.queue.EventQueue;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,10 +34,12 @@ public class OneHundredEventService {
     private final OneHundredEventRepository oneHundredEventRepository;
     private final EventQueue eventQueue;
     private final OneHundredEventCounter oneHundredEventCounter;
+    private final MeterRegistry meterRegistry;
 
 
     @Transactional
     public void addToQueue(Long eventId, Long memberId) {
+        long start = System.currentTimeMillis();
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
@@ -46,11 +50,15 @@ public class OneHundredEventService {
 
         event.validateAvailablePeriod();
 
-        if (eventQueue.isUserInQueue(eventId, memberId)) {
+        boolean added = eventQueue.addToQueue(eventId, memberId);
+        if (!added) {
+            meterRegistry.counter("event.queue.duplicate", "eventId", String.valueOf(eventId)).increment();
             throw new AlreadyInQueueException();
         }
-
-        eventQueue.addToQueue(eventId, memberId);
+        long duration = System.currentTimeMillis() - start;
+        meterRegistry.timer("event.queue.add.time", "eventId", String.valueOf(eventId))
+                .record(Duration.ofMillis(duration));
+        meterRegistry.counter("event.queue.add", "eventId", String.valueOf(eventId)).increment();
     }
 
     @Transactional

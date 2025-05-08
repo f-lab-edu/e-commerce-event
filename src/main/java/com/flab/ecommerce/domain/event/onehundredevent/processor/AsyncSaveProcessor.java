@@ -4,6 +4,7 @@ import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCo
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,6 +15,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
@@ -25,7 +28,13 @@ public class AsyncSaveProcessor {
     private final OneHundredEventCounter participantCounter;
     private final MeterRegistry meterRegistry;
     private final BlockingQueue<OneHundredEventParticipant> saveQueue = new LinkedBlockingQueue<>(10000);
-    private static final int BATCH_SIZE = 100;
+    private static final int BATCH_SIZE = 500;
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+
+    @PostConstruct
+    public void init() {
+        meterRegistry.gauge("event.save.queue.size", saveQueue, BlockingQueue::size);
+    }
 
     public void enqueue(OneHundredEventParticipant participant) {
         if (!saveQueue.offer(participant)) {
@@ -33,8 +42,15 @@ public class AsyncSaveProcessor {
                     participant.getEventId(), participant.getMemberId());
             meterRegistry.counter("event.save_queue_full").increment();
             participantCounter.decrease(participant.getEventId());
+            log.info("[큐 등록] eventId={}, memberId={}, 큐사이즈={}", participant.getEventId(), participant.getMemberId(), saveQueue.size());
+
         }
     }
+
+    public int getQueueSize() {
+        return saveQueue.size();
+    }
+
 
     @Scheduled(fixedRate = 100)
     public void batchSave() {
@@ -42,26 +58,57 @@ public class AsyncSaveProcessor {
         saveQueue.drainTo(batch, BATCH_SIZE);
 
         if (!batch.isEmpty()) {
-            for (OneHundredEventParticipant p : batch) {
+            executor.submit(() -> {
                 try {
                     long saveStart = System.currentTimeMillis();
-                    participantRepository.save(p);
+                    participantRepository.saveAll(batch);
                     long saveTime = System.currentTimeMillis() - saveStart;
 
+                    for (OneHundredEventParticipant p : batch) {
+                        meterRegistry.counter("event.save.success", "eventId", String.valueOf(p.getEventId())).increment();
+                    }
                     meterRegistry.timer("event.save_time.batch").record(Duration.ofMillis(saveTime));
-                    meterRegistry.counter("event.save.success").increment();
-                    meterRegistry.counter("event.participation.success").increment();
 
                 } catch (DataIntegrityViolationException dup) {
-                    log.warn("[중복 저장 차단됨] eventId={}, memberId={}", p.getEventId(), p.getMemberId());
-                    meterRegistry.counter("event.save.duplicate").increment();
-                    participantCounter.decrease(p.getEventId());
+
+                    for (OneHundredEventParticipant p : batch) {
+                        meterRegistry.counter("event.save.duplicate").increment();
+                        participantCounter.decrease(p.getEventId());
+                    }
 
                 } catch (Exception e) {
-                    log.error("[배치 저장 실패] 재시도 대상 - eventId={}, memberId={}", p.getEventId(), p.getMemberId(), e);
-                    enqueue(p);
+                    for (OneHundredEventParticipant p : batch) {
+                        participantCounter.decrease(p.getEventId());
+                    }
                 }
-            }
+            });
         }
     }
+
+
+//    @Scheduled(fixedRate = 100)
+//    public void batchSave() {
+//        List<OneHundredEventParticipant> batch = new ArrayList<>();
+//        saveQueue.drainTo(batch, BATCH_SIZE);
+//
+//        if (!batch.isEmpty()) {
+//            for (OneHundredEventParticipant p : batch) {
+//                try {
+//                    long saveStart = System.currentTimeMillis();
+//                    participantRepository.save(p);
+//                    long saveTime = System.currentTimeMillis() - saveStart;
+//
+//                    meterRegistry.timer("event.save_time.batch").record(Duration.ofMillis(saveTime));
+//                    meterRegistry.counter("event.save.success", "eventId", String.valueOf(p.getEventId())).increment();
+//
+//                } catch (DataIntegrityViolationException dup) {
+//                    meterRegistry.counter("event.save.duplicate").increment();
+//                    participantCounter.decrease(p.getEventId());
+//
+//                } catch (Exception e) {
+//                    participantCounter.decrease(p.getEventId());
+//                }
+//            }
+//        }
+//    }
 }

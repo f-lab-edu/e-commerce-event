@@ -27,12 +27,12 @@ public class OneHundredEventConsumer {
     private final EventQueue eventQueue;
     private final EventPolicy eventPolicy;
     private final MeterRegistry meterRegistry;
-    int coreCount = Runtime.getRuntime().availableProcessors();
+    int coreCount = Runtime.getRuntime().availableProcessors() * 2;
     private final ExecutorService executor =
             new ThreadPoolExecutor(
                     coreCount, coreCount,
                     0L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(1000)
+                    new LinkedBlockingQueue<>(2000)
             );
     private static final int MAX_PROCESS_PER_THREAD = 200;
 
@@ -42,6 +42,8 @@ public class OneHundredEventConsumer {
 
         for (int i = 0; i < coreCount; i++) {
             executor.submit(() -> {
+                meterRegistry.counter("event.consumer.thread.started").increment();
+
                 Set<Long> eventIds = eventQueue.getRegisteredEventIds();
                 Long eventId = pickEventId(eventIds);
 
@@ -75,7 +77,6 @@ public class OneHundredEventConsumer {
                         processed++;
 
                     } catch (DataIntegrityViolationException e) {
-                        log.warn("[중복 참가 차단됨] eventId={}, memberId={}", eventId, memberId);
                         meterRegistry.counter("event.participation.duplicate", "eventId", String.valueOf(eventId)).increment();
 
                     } catch (Exception e) {

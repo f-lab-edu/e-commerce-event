@@ -1,14 +1,20 @@
 package com.flab.ecommerce.domain.event.queue;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Primary
 @Component
 @RequiredArgsConstructor
@@ -23,12 +29,21 @@ public class RedisEventQueue implements EventQueue {
         String queueKey = getQueueKey(eventId);
         String dupKey = getDupKey(eventId, memberId);
 
-        //키가 없으면 넣고 true 반환
         Boolean isFirst = redisTemplate.opsForValue().setIfAbsent(dupKey, "1", Duration.ofMinutes(5));
-        if (Boolean.FALSE.equals(isFirst)) return false;
 
-        redisTemplate.opsForList().leftPush(queueKey, String.valueOf(memberId));
-        return true;
+        if (Boolean.FALSE.equals(isFirst)) {
+            return false;
+        }
+
+        try {
+            redisTemplate.opsForList().leftPush(queueKey, String.valueOf(memberId));
+            return true;
+        } catch (Exception e) {
+            redisTemplate.delete(dupKey);
+            log.error("[큐 등록 실패] eventId={}, memberId={}, 이유: {}", eventId, memberId, e.getMessage(), e);
+            throw e;
+        }
+
     }
 
     @Override
@@ -56,8 +71,32 @@ public class RedisEventQueue implements EventQueue {
 
     @Override
     public Set<Long> getRegisteredEventIds() {
-        return Set.of();
+        Set<Long> result = new HashSet<>();
+        String pattern = QUEUE_PREFIX + "*";
+
+        ScanOptions scanOptions = ScanOptions.scanOptions()
+                .match(pattern)
+                .count(1000)
+                .build();
+
+        RedisConnection connection = redisTemplate.getConnectionFactory().getConnection();
+        try (Cursor<byte[]> cursor = connection.scan(scanOptions)) {
+            while (cursor.hasNext()) {
+                String key = new String(cursor.next());
+                String eventIdStr = key.replace(QUEUE_PREFIX, "");
+                try {
+                    result.add(Long.parseLong(eventIdStr));
+                } catch (NumberFormatException e) {
+                    log.warn("[eventId 파싱 실패] key={}, 이유: {}", key, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.error("[SCAN 실패] pattern={}, 예외: {}", pattern, e.getMessage(), e);
+        }
+
+        return result;
     }
+
 
     @Override
     public boolean isUserInQueue(Long eventId, Long memberId) {

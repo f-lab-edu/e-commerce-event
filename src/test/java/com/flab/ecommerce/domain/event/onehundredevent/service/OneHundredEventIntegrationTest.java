@@ -6,6 +6,7 @@ import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
+import com.flab.ecommerce.domain.event.onehundredevent.processor.AsyncSaveProcessor;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.queue.EventQueue;
@@ -45,17 +46,21 @@ class OneHundredEventIntegrationTest {
     @Autowired
     private EventCounter oneHundredEventCounter;
 
+    @Autowired
+    private AsyncSaveProcessor saveProcessor;
+
+
     @BeforeEach
     void clearInMemoryData() {
       //  participantRepository.deleteAll();
-      //  eventRepository.deleteAll();
-       // eventQueue.clearAll();             // 큐 초기화
-      //  oneHundredEventCounter.reset();    // 카운터 초기화
+       // eventRepository.deleteAll();
+        eventQueue.clearAll();             // 큐 초기화
+        oneHundredEventCounter.reset();    // 카운터 초기화
     }
 
     @Test
     @DisplayName("100원 이벤트 - 큐 등록부터 정책 처리까지 전체 흐름 테스트")
-    void 사용자_큐참가_이후_컨슈머_처리까지_흐름_확인() {
+    void 사용자_큐참가_이후_컨슈머_처리까지_흐름_확인() throws Exception {
         // given
         Event event = Event.builder()
                 .type(EventType.ONE_HUNDRED_WON_DEAL)
@@ -79,6 +84,8 @@ class OneHundredEventIntegrationTest {
 
         // when: 컨슈머 역할 - 큐에서 pop 후 정책 적용
         eventPolicy.applyEvent(eventId, memberId);
+
+        Thread.sleep(1000);
 
         // then: 참가자 저장 확인
         List<OneHundredEventParticipant> participants = participantRepository.findByEventId(eventId);
@@ -147,6 +154,8 @@ class OneHundredEventIntegrationTest {
         applyExecutor.shutdown();
         long consumeEnd = System.currentTimeMillis();
 
+        Thread.sleep(10000);
+
         // then - 정합성 검증
         List<OneHundredEventParticipant> participants = participantRepository.findByEventId(eventId);
         int totalParticipants = participants.size();
@@ -155,7 +164,7 @@ class OneHundredEventIntegrationTest {
         System.out.println(" 최종 참가자 수: " + totalParticipants);
         assertThat((long)totalParticipants)
                 .as("참가자는 최대 인원 수를 넘으면 안됨")
-                .isLessThanOrEqualTo(expectedMax);
+                .isEqualTo(expectedMax);
 
         long totalEnd = System.currentTimeMillis();
         long duration = consumeEnd - consumeStart;
@@ -166,6 +175,109 @@ class OneHundredEventIntegrationTest {
         System.out.println("TPS (초당 처리량): " + String.format("%.2f", tps) + "건/초");
     }
 
+    @Test
+    @DisplayName("중복된 100명 동시 참가 후 정책 적용 테스트")
+    void 중복_백명_참가자_큐_등록_및_DB저장_검증() throws Exception {
+        long totalStart = System.currentTimeMillis();
+
+        // given
+        Event event = Event.builder()
+                .type(EventType.ONE_HUNDRED_WON_DEAL)
+                .startDate(LocalDateTime.now().minusMinutes(1))
+                .endDate(LocalDateTime.now().plusMinutes(10))
+                .maxParticipants(100)
+                .status(EventStatus.ACTIVE)
+                .name("100원 DEAL")
+                .description("중복 동시 참가 100")
+                .build();
+        eventRepository.save(event);
+        Long eventId = event.getId();
+
+
+        int iterTimes = 10;
+        int totalUsers = 100;
+        int coreCount = Runtime.getRuntime().availableProcessors();
+        for (long i = 1; i <= totalUsers; i++) {
+            for (long j = 1; j <= iterTimes; j++) {
+                long memberId = i;
+                try {
+                    oneHundredEventService.addToQueue(eventId, memberId);
+                } catch (Exception e) {
+
+                }
+            }
+        }
+
+//        ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
+//        CountDownLatch latch = new CountDownLatch(totalUsers);
+//
+//        for (long i = 1; i <= totalUsers; i++) {
+//            for (long j = 1; j <= iterTimes; j++) {
+//                long memberId = i;
+//                executor.submit(() -> {
+//                    try {
+//                        oneHundredEventService.addToQueue(eventId, memberId);
+//                    } catch (Exception e) {
+//
+//                    }
+//                    finally {
+//                         latch.countDown();
+//                     }
+//                });
+//            }
+//        }
+//
+//        latch.await();
+//        executor.shutdown();
+
+        long consumeStart = System.currentTimeMillis();
+        int queueSize = eventQueue.getQueueSize(eventId);
+        ExecutorService applyExecutor = Executors.newFixedThreadPool(coreCount * 2);
+        CountDownLatch applyLatch = new CountDownLatch(queueSize);
+
+        for (int i = 0; i < queueSize; i++) {
+            Long memberId = eventQueue.popFromQueue(eventId).orElse(null);
+            if (memberId != null) {
+                applyExecutor.submit(() -> {
+                    try {
+                        eventPolicy.applyEvent(eventId, memberId);
+                    } finally {
+                        applyLatch.countDown();
+                    }
+                });
+            } else {
+                applyLatch.countDown();
+            }
+        }
+
+        applyLatch.await();
+        applyExecutor.shutdown();
+        long consumeEnd = System.currentTimeMillis();
+
+        Thread.sleep(10000);
+
+        // then - 정합성 검증
+        List<OneHundredEventParticipant> participants = participantRepository.findByEventId(eventId);
+        int totalParticipants = participants.size();
+        long expectedMax = event.getMaxParticipants();
+
+        System.out.println(" 최종 참가자 수: " + totalParticipants);
+        assertThat((long)totalParticipants)
+                .as("참가자는 최대 인원 수를 넘으면 안됨")
+                .isEqualTo(expectedMax);
+
+        long totalEnd = System.currentTimeMillis();
+        long duration = consumeEnd - consumeStart;
+        double tps = totalParticipants / (duration / 1000.0);
+
+        System.out.println("전체 소요 시간: " + (totalEnd - totalStart) + "ms");
+        System.out.println("컨슈머 처리 시간: " + duration + "ms");
+        System.out.println("TPS (초당 처리량): " + String.format("%.2f", tps) + "건/초");
+        System.out.println("카운터 수: " + oneHundredEventCounter.getCount(eventId));
+        System.out.println("DB 저장 수: " + participantRepository.countByEventId(eventId));
+        System.out.println("남은 저장 큐 크기: " + saveProcessor.getQueueSize()); // getQueueSize() 추가 필요
+
+    }
 
     @Test
     @DisplayName("두 이벤트 병렬 처리 - 락 범위 좁힘 + TPS 측정")

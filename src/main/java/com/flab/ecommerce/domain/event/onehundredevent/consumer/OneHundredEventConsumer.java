@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,9 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -24,19 +27,26 @@ public class OneHundredEventConsumer {
     private final EventQueue eventQueue;
     private final EventPolicy eventPolicy;
     private final MeterRegistry meterRegistry;
-    int coreCount = Runtime.getRuntime().availableProcessors();
-    private final ExecutorService executor = Executors.newFixedThreadPool(coreCount);
-    private static final int MAX_PROCESS_PER_THREAD = 50;
+    int coreCount = Runtime.getRuntime().availableProcessors() * 2;
+    private final ExecutorService executor =
+            new ThreadPoolExecutor(
+                    coreCount, coreCount,
+                    0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>(2000)
+            );
+    private static final int MAX_PROCESS_PER_THREAD = 200;
 
     //@Async
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 500)
     public void consumeQueue() {
+
+        Set<Long> eventIds = eventQueue.getRegisteredEventIds();
 
         for (int i = 0; i < coreCount; i++) {
             executor.submit(() -> {
-                Set<Long> eventIds = eventQueue.getRegisteredEventIds();
-                Long eventId = pickEventId(eventIds);
+                meterRegistry.counter("event.consumer.thread.started").increment();
 
+                Long eventId = pickEventId(eventIds);
                 if (eventId == null) {
                     return;
                 }
@@ -66,10 +76,14 @@ public class OneHundredEventConsumer {
 
                         processed++;
 
+                    } catch (DataIntegrityViolationException e) {
+                        meterRegistry.counter("event.participation.duplicate", "eventId", String.valueOf(eventId)).increment();
+
                     } catch (Exception e) {
-                        log.info("[이벤트 처리 실패] eventId={}, memberId={}, 예외 타입={}, 메시지={}",
+                        log.error("[이벤트 처리 실패] eventId={}, memberId={}, 예외 타입={}, 메시지={}",
                                 eventId, memberId, e.getClass().getSimpleName(), e.getMessage(), e);
                     }
+
                 }
 
                 meterRegistry.counter("event.consumer.processed", "eventId", String.valueOf(eventId))

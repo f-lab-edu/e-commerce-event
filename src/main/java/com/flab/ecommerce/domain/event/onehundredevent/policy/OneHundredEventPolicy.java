@@ -3,7 +3,7 @@ package com.flab.ecommerce.domain.event.onehundredevent.policy;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.MaxParticipantsExceededException;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
@@ -25,7 +25,7 @@ public class OneHundredEventPolicy extends EventPolicy {
 
     private final OneHundredEventRepository participantRepository;
     private final EventRepository eventRepository;
-    private final OneHundredEventCounter participantCounter;
+    private final EventCounter eventCounter;
     private final MeterRegistry meterRegistry;
 
 
@@ -43,7 +43,7 @@ public class OneHundredEventPolicy extends EventPolicy {
         long existsCheckTime = System.currentTimeMillis() - start;
         meterRegistry.timer("event.duplication_check").record(Duration.ofMillis(existsCheckTime));
 
-        boolean success = participantCounter.increase(eventId, event.getMaxParticipants());
+        boolean success = eventCounter.increase(eventId, event.getMaxParticipants());
         if (!success) {
             throw new MaxParticipantsExceededException();
         }

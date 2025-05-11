@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-public class OneHundredEventCounter implements EventCounter {
+public class InMemoryEventCounter implements EventCounter {
     private final Map<Long, AtomicInteger> counterMap = new ConcurrentHashMap<>();
 
     @Override

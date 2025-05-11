@@ -1,70 +1,76 @@
 package com.flab.ecommerce.domain.event.queue;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Primary
 @Component
 @RequiredArgsConstructor
 public class RedisEventQueue implements EventQueue {
 
     private final RedisTemplate<String, String> redisTemplate;
     private static final String QUEUE_PREFIX = "queue:one_hundred_event:";
+    private static final String DUPLICATE_PREFIX = "dup:one_hundred_event:";
 
+    @Override
     public boolean addToQueue(Long eventId, Long memberId) {
+        String queueKey = getQueueKey(eventId);
+        String dupKey = getDupKey(eventId, memberId);
 
-        if (isUserInQueue(eventId, memberId)) {
-            return false;
-        }
+        //키가 없으면 넣고 true 반환
+        Boolean isFirst = redisTemplate.opsForValue().setIfAbsent(dupKey, "1", Duration.ofMinutes(5));
+        if (Boolean.FALSE.equals(isFirst)) return false;
 
-        String queueKey = QUEUE_PREFIX + eventId;
         redisTemplate.opsForList().leftPush(queueKey, String.valueOf(memberId));
-        redisTemplate.persist(queueKey);
-        redisTemplate.expire(queueKey, Duration.ofMinutes(5));
         return true;
     }
 
+    @Override
     public Optional<Long> popFromQueue(Long eventId) {
-        String queueKey = QUEUE_PREFIX + eventId;
-        String userId = redisTemplate.opsForList().leftPop(queueKey);
-        return Optional.ofNullable(userId).map(Long::parseLong);
+        String queueKey = getQueueKey(eventId);
+        String memberId = redisTemplate.opsForList().rightPop(queueKey);
+        return Optional.ofNullable(memberId).map(Long::parseLong);
     }
 
+    @Override
     public int getQueueSize(Long eventId) {
-        String queueKey = QUEUE_PREFIX + eventId;
-        return Optional.ofNullable(redisTemplate.opsForList().size(queueKey)).orElse(0L).intValue();
+        Long size = redisTemplate.opsForList().size(getQueueKey(eventId));
+        return size != null ? size.intValue() : 0;
     }
 
+    @Override
     public void removeUserFromQueue(Long eventId, Long memberId) {
-        String queueKey = QUEUE_PREFIX + eventId;
-        redisTemplate.opsForList().remove(queueKey, 1, String.valueOf(memberId));
+        redisTemplate.opsForList().remove(getQueueKey(eventId), 1, String.valueOf(memberId));
+        redisTemplate.delete(getDupKey(eventId, memberId));
     }
 
     @Override
     public void clearAll() {
-
     }
 
     @Override
     public Set<Long> getRegisteredEventIds() {
-        return null;
+        return Set.of();
     }
 
+    @Override
     public boolean isUserInQueue(Long eventId, Long memberId) {
-        String queueKey = QUEUE_PREFIX + eventId;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(getDupKey(eventId, memberId)));
+    }
 
-        Boolean hasKey = redisTemplate.hasKey(queueKey);
-        if (Boolean.FALSE.equals(hasKey)) {
-            return false;
-        }
+    private String getQueueKey(Long eventId) {
+        return QUEUE_PREFIX + eventId;
+    }
 
-        List<String> queueList = redisTemplate.opsForList().range(queueKey, 0, -1);
-        return queueList.contains(String.valueOf(memberId));
+    private String getDupKey(Long eventId, Long memberId) {
+        return DUPLICATE_PREFIX + eventId + ":" + memberId;
     }
 }
+
 

@@ -4,7 +4,7 @@ package com.flab.ecommerce.domain.event.onehundredevent.service;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
@@ -43,7 +43,7 @@ class OneHundredEventIntegrationTest {
     @Autowired
     private EventPolicy eventPolicy;
     @Autowired
-    private OneHundredEventCounter oneHundredEventCounter;
+    private EventCounter oneHundredEventCounter;
 
     @BeforeEach
     void clearInMemoryData() {

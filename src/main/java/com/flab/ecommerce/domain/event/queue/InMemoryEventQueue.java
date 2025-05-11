@@ -1,12 +1,10 @@
 package com.flab.ecommerce.domain.event.queue;
 
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 @Component
-@Primary
 public class InMemoryEventQueue implements EventQueue {
     private final Map<Long, Queue<Long>> eventQueueMap = new HashMap<>();
 

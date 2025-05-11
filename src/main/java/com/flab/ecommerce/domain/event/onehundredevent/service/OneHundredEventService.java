@@ -4,7 +4,7 @@ import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventTypeException;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory.OneHundredEventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.dto.EventLogResponseDTO;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;

@@ -1,10 +1,10 @@
-/*
+
 package com.flab.ecommerce.domain.event.onehundredevent.service;
 
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory.OneHundredEventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
@@ -47,10 +47,10 @@ class OneHundredEventIntegrationTest {
 
     @BeforeEach
     void clearInMemoryData() {
-        participantRepository.deleteAll();
-        eventRepository.deleteAll();
-        eventQueue.clearAll();             // 큐 초기화
-        oneHundredEventCounter.reset();    // 카운터 초기화
+      //  participantRepository.deleteAll();
+      //  eventRepository.deleteAll();
+       // eventQueue.clearAll();             // 큐 초기화
+      //  oneHundredEventCounter.reset();    // 카운터 초기화
     }
 
     @Test
@@ -70,7 +70,7 @@ class OneHundredEventIntegrationTest {
 
         Long eventId = event.getId();
         Long memberId = 123L;
-123L
+
         // when: 큐에 참여
         oneHundredEventService.addToQueue(eventId, memberId);
 
@@ -272,4 +272,4 @@ class OneHundredEventIntegrationTest {
     }
 
 }
-*/
+

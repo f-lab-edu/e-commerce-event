@@ -1,6 +1,6 @@
-package com.flab.ecommerce.domain.event.onehundredevent.counter;
+package com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory;
 
-import com.flab.ecommerce.domain.event.counter.EventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 
 import java.util.HashMap;
 import java.util.Map;

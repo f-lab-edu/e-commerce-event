@@ -1,4 +1,4 @@
-package com.flab.ecommerce.domain.event.counter;
+package com.flab.ecommerce.domain.event.onehundredevent.counter;
 
 public interface EventCounter {
     boolean increase(Long eventId, long maxParticipants);

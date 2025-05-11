@@ -3,7 +3,7 @@ package com.flab.ecommerce.domain.event.onehundredevent.policy;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.MaxParticipantsExceededException;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory.OneHundredEventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;

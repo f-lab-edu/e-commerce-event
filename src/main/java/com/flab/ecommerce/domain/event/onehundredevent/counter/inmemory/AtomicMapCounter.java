@@ -1,20 +1,20 @@
-package com.flab.ecommerce.domain.event.onehundredevent.counter;
+package com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory;
 
-import com.flab.ecommerce.domain.event.counter.EventCounter;
-import org.springframework.stereotype.Component;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Component
-public class OneHundredEventCounter implements EventCounter {
+
+public class AtomicMapCounter implements EventCounter {
     private final Map<Long, AtomicInteger> counterMap = new ConcurrentHashMap<>();
 
     @Override
     public boolean increase(Long eventId, long maxParticipants) {
         AtomicInteger counter = counterMap.computeIfAbsent(eventId, id -> new AtomicInteger(0));
-        if (counter.getAndIncrement() >= maxParticipants) return false;
+        if (counter.get() >= maxParticipants) return false;
+        counter.incrementAndGet();
         return true;
     }
 
@@ -39,3 +39,5 @@ public class OneHundredEventCounter implements EventCounter {
         counterMap.clear();
     }
 }
+
+

@@ -36,6 +36,8 @@ public class InMemoryEventCounter implements EventCounter {
             meterRegistry.counter("event.counter.increase.failure", "eventId", String.valueOf(eventId)).increment();
             return false;
         }
+
+        meterRegistry.counter("event.counter.increase.success", "eventId").increment();
         return true;
     }
 

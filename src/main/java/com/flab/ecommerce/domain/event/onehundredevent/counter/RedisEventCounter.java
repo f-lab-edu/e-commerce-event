@@ -1,5 +1,7 @@
 package com.flab.ecommerce.domain.event.onehundredevent.counter;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class RedisEventCounter implements EventCounter {
 
     private final StringRedisTemplate redisTemplate;
+    private final MeterRegistry meterRegistry;
     private static final String COUNTER_KEY_PREFIX = "event:counter:";
 
     private String getKey(Long eventId) {
@@ -20,10 +23,16 @@ public class RedisEventCounter implements EventCounter {
     @Override
     public boolean increase(Long eventId, long maxParticipants) {
         Long count = redisTemplate.opsForValue().increment(getKey(eventId));
-        if (count > maxParticipants) {
+        Tags tags = Tags.of("eventId", String.valueOf(eventId));
+        if (count != null) {
+            meterRegistry.summary("event.participant.count", tags).record(count);
+        }
+        if (count != null && count > maxParticipants)  {
             redisTemplate.opsForValue().decrement(getKey(eventId));
+            meterRegistry.counter("event.counter.increase.failure", tags).increment();
             return false;
         }
+        meterRegistry.counter("event.counter.increase.success", tags).increment();
         return true;
     }
 

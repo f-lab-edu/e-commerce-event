@@ -33,7 +33,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: ./gradlew clean build -x test # 추후에 테스트 코드 포함하게 변경
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -50,7 +50,7 @@ jobs:
       - name: Deploy to App Server #1
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.APP_SERVER1_HOST }}
+          host: ${{ secrets.APP_SERVER_HOST_1 }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           proxy_host: ${{ secrets.BASTION_HOST }}
@@ -65,7 +65,7 @@ jobs:
       - name: Deploy to App Server #2
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.APP_SERVER2_HOST }}
+          host: ${{ secrets.APP_SERVER_HOST_2 }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           proxy_host: ${{ secrets.BASTION_HOST }}

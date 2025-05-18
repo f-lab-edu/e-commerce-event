@@ -58,20 +58,10 @@ jobs:
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           debug: true
           script: |
-            echo "== Proxy SSH 접근 성공 =="
-            echo "== 현재 위치: $(pwd)"
-            echo "== 현재 유저: $(whoami)"
-            echo "== Bastion 서버에서 App 서버로 SSH 접속 성공한 상태"
-            ping -c 3 8.8.8.8 || echo "️외부 인터넷 불가"
-            docker -v || echo "Docker 미설치"
+            cd /root/e-commerce-mall
             docker pull $IMAGE_NAME:$TAG
             docker compose -f docker-compose.app.yml down || true
             docker compose -f docker-compose.app.yml up -d
-          #script: |
-            # cd /root/e-commerce-mall
-           # docker pull $IMAGE_NAME:$TAG
-            #docker compose -f docker-compose.app.yml down || true
-            #docker compose -f docker-compose.app.yml up -d
 
       - name: Deploy to App Server #2
         uses: appleboy/ssh-action@v0.1.10

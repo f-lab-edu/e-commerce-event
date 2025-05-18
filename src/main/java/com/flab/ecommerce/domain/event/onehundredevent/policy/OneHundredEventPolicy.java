@@ -7,7 +7,6 @@ import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.processor.AsyncSaveProcessor;
-import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -27,6 +26,7 @@ public class OneHundredEventPolicy extends EventPolicy {
     private final EventRepository eventRepository;
     private final EventCounter eventCounter;
     private final AsyncSaveProcessor saveProcessor;
+    //private final InMemoryDuplicateChecker duplicateChecker;
     private final MeterRegistry meterRegistry;
 
     @Override
@@ -36,14 +36,14 @@ public class OneHundredEventPolicy extends EventPolicy {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-       // if (duplicateChecker.isDuplicate(eventId, memberId)) {
-        //    meterRegistry.counter("event.duplicate.memory_check", "eventId", String.valueOf(eventId)).increment();
-        //    return;
-       // }
+//        if (duplicateChecker.isDuplicate(eventId, memberId)) {
+//            meterRegistry.counter("event.duplicate.memory_check", "eventId", String.valueOf(eventId)).increment();
+//            return;
+//        }
 
         boolean success = eventCounter.increase(eventId, event.getMaxParticipants());
         if (!success) {
-            //duplicateChecker.remove(eventId, memberId);
+//            duplicateChecker.remove(eventId, memberId);
             meterRegistry.counter("event.participant.limit_exceeded", "eventId", String.valueOf(eventId)).increment();
             throw new MaxParticipantsExceededException();
         }
@@ -59,7 +59,7 @@ public class OneHundredEventPolicy extends EventPolicy {
             saveProcessor.enqueue(participant);
         } catch (Exception e) {
             eventCounter.decrease(eventId);
-            //duplicateChecker.remove(eventId, memberId);
+//            duplicateChecker.remove(eventId, memberId);
             throw e;
         } finally {
             long duration = System.currentTimeMillis() - start;

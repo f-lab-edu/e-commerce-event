@@ -47,7 +47,7 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: docker push $IMAGE_NAME:$TAG
 
-      - name: Deploy to App Server #1
+      - name: Deploy to App Server #1 ssh
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.APP_SERVER_HOST_1 }}

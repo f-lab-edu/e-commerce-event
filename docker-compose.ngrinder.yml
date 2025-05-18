@@ -1,0 +1,128 @@
+services:
+  ngrinder-controller:
+    image: ngrinder/controller
+    container_name: ngrinder-controller
+    platform: linux/amd64
+    restart: always
+    ports:
+      - "8081:80"
+      - "16001:16001"
+      - "12000-12100:12000-12100"
+    environment:
+      TZ: Asia/Seoul
+      JAVA_OPTS: "-Xms1024m -Xmx1024m -Dserver.port=80 -Dcontroller.port=16010 -Dngrinder.controller.ip=ngrinder-controller"
+    networks:
+      - ecommerce_network
+    healthcheck:
+      test: [ "CMD", "curl", "-fs", "http://localhost:80/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+    volumes:
+      - ngrinder_data_prod:/opt/ngrinder-controller
+
+
+#  ngrinder-agent-1:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-1
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: ["/bin/sh", "/scripts/run.sh", "ngrinder-controller"]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+#
+#  ngrinder-agent-2:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-2
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+#
+#  ngrinder-agent-3:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-3
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      - ngrinder_data:/opt/ngrinder-controller
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+#
+#  ngrinder-agent-4:
+#    image: ngrinder/agent
+#    container_name: ngrinder-agent-4
+#    platform: linux/amd64
+#    restart: always
+#    environment:
+#      TZ: Asia/Seoul
+#      JAVA_OPTS: "-Xms256m -Xmx768m"
+#      #CONTROLLER_IP: ngrinder-controller
+#    depends_on:
+#      - ngrinder-controller
+#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+#    networks:
+#      - ecommerce_network
+#    volumes:
+#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
+#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 1g
+#          cpus: '1.5'
+
+volumes:
+  ngrinder_data_prod:
+
+networks:
+  ecommerce_network:
+    driver: bridge

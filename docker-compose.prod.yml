@@ -1,5 +1,5 @@
 services:
-  app-1:
+  app:
     build:
       context: .
     container_name: e-commerce-mall
@@ -7,34 +7,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: docker-prod
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db_prod:3306/ecommerce_prod?serverTimezone=UTC&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_REDIS_HOST: redis_server_prod
-      SPRING_REDIS_PORT: 6379
-      TZ: Asia/Seoul
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - ecommerce_network
-    deploy:
-      resources:
-        limits:
-          cpus: '4.0'
-
-  app-2:
-    build:
-      context: .
-    container_name: e-commerce-mall
-    restart: always
-    ports:
-      - "8083:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker-prod
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db_prod:3306/ecommerce_prod?serverTimezone=UTC&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
@@ -59,6 +32,8 @@ services:
     container_name: mysql_db_prod
     restart: always
     command: --local-infile=1
+    env_file:
+      - .env.prod
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -95,11 +70,11 @@ services:
       retries: 5
 
   redis-insight:
-    image: redislabs/redisinsight:latest
+    image: redis/redisinsight:latest
     container_name: redis_insight
     restart: always
     ports:
-      - "8001:8001"
+      - "5540:5540"
     networks:
       - ecommerce_network
 
@@ -124,7 +99,7 @@ services:
       retries: 10
       start_period: 300s
     volumes:
-      - ngrinder_data:/opt/ngrinder-controller
+      - ngrinder_data_prod:/opt/ngrinder-controller
     deploy:
       resources:
         limits:
@@ -260,7 +235,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana_data_prod:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     networks:
@@ -269,8 +244,8 @@ services:
 volumes:
   db_data_prod:
   redis_data_prod:
-  ngrinder_data:
-  grafana_data:
+  ngrinder_data_prod:
+  grafana_data_prod:
 
 networks:
   ecommerce_network:

@@ -40,13 +40,13 @@ public class OneHundredEventConsumer {
     @Scheduled(fixedDelay = 500)
     public void consumeQueue() {
 
+        Set<Long> eventIds = eventQueue.getRegisteredEventIds();
+
         for (int i = 0; i < coreCount; i++) {
             executor.submit(() -> {
                 meterRegistry.counter("event.consumer.thread.started").increment();
 
-                Set<Long> eventIds = eventQueue.getRegisteredEventIds();
                 Long eventId = pickEventId(eventIds);
-
                 if (eventId == null) {
                     return;
                 }

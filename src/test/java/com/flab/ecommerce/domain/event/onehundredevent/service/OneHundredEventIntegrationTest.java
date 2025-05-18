@@ -4,7 +4,7 @@ package com.flab.ecommerce.domain.event.onehundredevent.service;
 import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.processor.AsyncSaveProcessor;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
@@ -44,11 +44,11 @@ class OneHundredEventIntegrationTest {
     @Autowired
     private EventPolicy eventPolicy;
     @Autowired
-    private OneHundredEventCounter oneHundredEventCounter;
+    private EventCounter oneHundredEventCounter;
+
     @Autowired
     private AsyncSaveProcessor saveProcessor;
-    @Autowired
-    private OneHundredEventCounter participantCounter;
+
 
     @BeforeEach
     void clearInMemoryData() {
@@ -273,7 +273,7 @@ class OneHundredEventIntegrationTest {
         System.out.println("전체 소요 시간: " + (totalEnd - totalStart) + "ms");
         System.out.println("컨슈머 처리 시간: " + duration + "ms");
         System.out.println("TPS (초당 처리량): " + String.format("%.2f", tps) + "건/초");
-        System.out.println("카운터 수: " + participantCounter.getCount(eventId));
+        System.out.println("카운터 수: " + oneHundredEventCounter.getCount(eventId));
         System.out.println("DB 저장 수: " + participantRepository.countByEventId(eventId));
         System.out.println("남은 저장 큐 크기: " + saveProcessor.getQueueSize()); // getQueueSize() 추가 필요
 

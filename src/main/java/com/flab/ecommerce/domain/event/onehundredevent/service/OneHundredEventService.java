@@ -4,7 +4,7 @@ import com.flab.ecommerce.domain.event.entity.Event;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.exception.EventNotFoundException;
 import com.flab.ecommerce.domain.event.exception.InvalidEventTypeException;
-import com.flab.ecommerce.domain.event.onehundredevent.counter.OneHundredEventCounter;
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.dto.EventLogResponseDTO;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
@@ -33,7 +33,7 @@ public class OneHundredEventService {
     private final EventRepository eventRepository;
     private final OneHundredEventRepository oneHundredEventRepository;
     private final EventQueue eventQueue;
-    private final OneHundredEventCounter oneHundredEventCounter;
+    private final EventCounter eventCounter;
     private final MeterRegistry meterRegistry;
 
 
@@ -79,7 +79,7 @@ public class OneHundredEventService {
             oneHundredEventRepository.save(participant);
             eventQueue.removeUserFromQueue(participant.getEventId(), participant.getMemberId());
 
-            oneHundredEventCounter.decrease(participant.getEventId());
+            eventCounter.decrease(participant.getEventId());
             log.info("[스케줄러 완료] 만료된 참가자 취소 완료");
         }
     }

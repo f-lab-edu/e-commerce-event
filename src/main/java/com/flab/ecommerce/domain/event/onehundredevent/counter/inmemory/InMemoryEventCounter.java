@@ -1,6 +1,7 @@
-package com.flab.ecommerce.domain.event.onehundredevent.counter;
+package com.flab.ecommerce.domain.event.onehundredevent.counter.inmemory;
 
-import com.flab.ecommerce.domain.event.counter.EventCounter;
+
+import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @Slf4j
-public class OneHundredEventCounter implements EventCounter {
+public class InMemoryEventCounter implements EventCounter {
+
     private final Map<Long, AtomicInteger> counterMap = new ConcurrentHashMap<>();
     private final MeterRegistry meterRegistry;
-
-    public OneHundredEventCounter(MeterRegistry meterRegistry) {
+    public InMemoryEventCounter(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
 
@@ -35,6 +36,8 @@ public class OneHundredEventCounter implements EventCounter {
             meterRegistry.counter("event.counter.increase.failure", "eventId", String.valueOf(eventId)).increment();
             return false;
         }
+
+        meterRegistry.counter("event.counter.increase.success", "eventId").increment();
         return true;
     }
 

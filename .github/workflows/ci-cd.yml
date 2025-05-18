@@ -2,9 +2,9 @@ name: CI/CD Workflow
 
 on:
   push:
-    branches: [ develop ]  # 또는 'prod', 'release' 등 원하는 브랜치
+    branches: [ * ]
   pull_request:
-    branches: [ develop ]
+    branches: [ * ]
 
 jobs:
   build-and-deploy:
@@ -42,16 +42,34 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: docker push $IMAGE_NAME:$TAG
 
+      - name: Deploy to App Server #1
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.APP_SERVER1_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.BASTION_HOST }}
+          proxy_username: root
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/e-commerce-mall
+            docker pull $IMAGE_NAME:$TAG
+            docker compose -f docker-compose.app.yml down || true
+            docker compose -f docker-compose.app.yml up -d
 
-      # - name: Deploy to server (SSH)
-      #   uses: appleboy/ssh-action@v0.1.10
-      #   with:
-      #     host: ${{ secrets.SERVER_HOST }}
-      #     username: ${{ secrets.SERVER_USER }}
-      #     key: ${{ secrets.SERVER_SSH_KEY }}
-      #     script: |
-      #       docker pull $IMAGE_NAME:$TAG
-      #       docker stop your-container-name || true
-      #       docker rm your-container-name || true
-      #       docker run -d --name your-container-name -p 8080:8080 $IMAGE_NAME:$TAG
+      - name: Deploy to App Server #2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.APP_SERVER2_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.BASTION_HOST }}
+          proxy_username: root
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/e-commerce-mall
+            docker pull $IMAGE_NAME:$TAG
+            docker compose -f docker-compose.app.yml down || true
+            docker compose -f docker-compose.app.yml up -d
+      
 

@@ -17,12 +17,6 @@ services:
       - "3306:3306"
     volumes:
       - db_data_prod:/var/lib/mysql
-    networks:
-      - ecommerce_network
 
 volumes:
   db_data_prod:
-
-networks:
-  ecommerce_network:
-    driver: bridge

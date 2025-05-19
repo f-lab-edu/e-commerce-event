@@ -16,9 +16,3 @@ services:
       SPRING_REDIS_HOST: ${SPRING_REDIS_HOST}
       SPRING_REDIS_PORT: ${SPRING_REDIS_PORT}
       TZ: ${TZ}
-    networks:
-      - ecommerce_network
-
-networks:
-  ecommerce_network:
-    driver: bridge

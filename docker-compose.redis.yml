@@ -6,8 +6,6 @@ services:
     ports:
       - "6379:6379"
     command: [ "redis-server", "--appendonly", "yes", "--bind", "0.0.0.0", "--protected-mode", "no" ]
-    networks:
-      - ecommerce_network
     volumes:
       - redis_data_prod:/data
     healthcheck:
@@ -25,12 +23,6 @@ services:
       - REDIS_PORT=${SPRING_REDIS_PORT}
     ports:
       - "5540:5540"
-    networks:
-      - ecommerce_network
 
 volumes:
   redis_data_prod:
-
-networks:
-  ecommerce_network:
-    driver: bridge

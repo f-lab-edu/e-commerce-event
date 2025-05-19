@@ -10,8 +10,6 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     restart: always
-    networks:
-      - ecommerce_network
 
   prometheus:
     image: prom/prometheus
@@ -21,8 +19,6 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - ecommerce_network
 
   grafana:
     image: grafana/grafana
@@ -34,12 +30,7 @@ services:
       - grafana_data_prod:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
-    networks:
-      - ecommerce_network
 
 volumes:
   grafana_data_prod:
 
-networks:
-  ecommerce_network:
-    driver: bridge

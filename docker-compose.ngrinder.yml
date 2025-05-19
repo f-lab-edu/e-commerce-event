@@ -11,8 +11,6 @@ services:
     environment:
       TZ: Asia/Seoul
       JAVA_OPTS: "-Xms1024m -Xmx1024m -Dserver.port=80 -Dcontroller.port=16010 -Dngrinder.controller.ip=ngrinder-controller"
-    networks:
-      - ecommerce_network
     healthcheck:
       test: [ "CMD", "curl", "-fs", "http://localhost:80/" ]
       interval: 30s
@@ -122,7 +120,3 @@ services:
 
 volumes:
   ngrinder_data_prod:
-
-networks:
-  ecommerce_network:
-    driver: bridge

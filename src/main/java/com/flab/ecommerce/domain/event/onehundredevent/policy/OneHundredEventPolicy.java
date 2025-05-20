@@ -12,6 +12,7 @@ import com.flab.ecommerce.domain.event.repository.EventRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class OneHundredEventPolicy extends EventPolicy {
     private final AsyncSaveProcessor saveProcessor;
     //private final InMemoryDuplicateChecker duplicateChecker;
     private final MeterRegistry meterRegistry;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     @Transactional
@@ -60,6 +62,8 @@ public class OneHundredEventPolicy extends EventPolicy {
         } catch (Exception e) {
             eventCounter.decrease(eventId);
 //            duplicateChecker.remove(eventId, memberId);
+         //   String dupKey = "dup:one_hundred_event:" + eventId + ":" + memberId;
+          //  redisTemplate.delete(dupKey);
             throw e;
         } finally {
             long duration = System.currentTimeMillis() - start;

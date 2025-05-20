@@ -10,12 +10,14 @@ import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventPar
 import com.flab.ecommerce.domain.event.onehundredevent.enums.ParticipantStatus;
 import com.flab.ecommerce.domain.event.onehundredevent.exception.AlreadyInQueueException;
 import com.flab.ecommerce.domain.event.onehundredevent.exception.NotInPendingStateException;
+import com.flab.ecommerce.domain.event.onehundredevent.message.EventMessage;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.queue.EventQueue;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +37,7 @@ public class OneHundredEventService {
     private final EventQueue eventQueue;
     private final EventCounter eventCounter;
     private final MeterRegistry meterRegistry;
-
+    private final KafkaTemplate<String, EventMessage> eventMessageKafkaTemplate;
 
     @Transactional
     public void addToQueue(Long eventId, Long memberId) {
@@ -50,7 +52,10 @@ public class OneHundredEventService {
 
         event.validateAvailablePeriod();
 
+//        EventMessage message = new EventMessage(eventId, memberId);
+//        eventMessageKafkaTemplate.send("event-participant", message);
         boolean added = eventQueue.addToQueue(eventId, memberId);
+
         if (!added) {
             meterRegistry.counter("event.queue.duplicate", "eventId", String.valueOf(eventId)).increment();
             throw new AlreadyInQueueException();

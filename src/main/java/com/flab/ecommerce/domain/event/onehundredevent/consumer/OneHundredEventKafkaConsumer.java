@@ -5,6 +5,7 @@ import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
+@Profile("kafka")
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -35,7 +37,6 @@ public class OneHundredEventKafkaConsumer {
             meterRegistry.counter("event.kafka.duplicate", "eventId", String.valueOf(eventId)).increment();
             return;
         }
-
 
         try {
             long start = System.currentTimeMillis();

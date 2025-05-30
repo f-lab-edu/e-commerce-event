@@ -6,7 +6,7 @@ import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
-import com.flab.ecommerce.domain.event.onehundredevent.processor.AsyncSaveProcessor;
+import com.flab.ecommerce.domain.event.onehundredevent.processor.RedisSaveProcessor;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.queue.EventQueue;
@@ -53,7 +53,7 @@ class OneHundredEventIntegrationTest {
     private EventCounter oneHundredEventCounter;
 
     @Autowired
-    private AsyncSaveProcessor saveProcessor;
+    private RedisSaveProcessor saveProcessor;
 
 
     @BeforeEach

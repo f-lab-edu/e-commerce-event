@@ -17,6 +17,7 @@ import com.flab.ecommerce.domain.event.repository.EventRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,8 @@ public class OneHundredEventService {
     private final EventCounter eventCounter;
     private final MeterRegistry meterRegistry;
     private final KafkaTemplate<String, EventMessage> eventMessageKafkaTemplate;
+    @Value("${event.consumer.type}")
+    private String consumerType;
 
     @Transactional
     public void addToQueue(Long eventId, Long memberId) {
@@ -52,14 +55,16 @@ public class OneHundredEventService {
 
         event.validateAvailablePeriod();
 
-//        EventMessage message = new EventMessage(eventId, memberId);
-//        eventMessageKafkaTemplate.send("event-participant", message);
-        boolean added = eventQueue.addToQueue(eventId, memberId);
-
-        if (!added) {
-            meterRegistry.counter("event.queue.duplicate", "eventId", String.valueOf(eventId)).increment();
-            throw new AlreadyInQueueException();
+        if ("kafka".equals(consumerType)) {
+            EventMessage message = new EventMessage(eventId, memberId);
+            eventMessageKafkaTemplate.send("event-participant", message);
+        } else {
+            boolean added = eventQueue.addToQueue(eventId, memberId);
+            if (!added) {
+                throw new AlreadyInQueueException();
+            }
         }
+
         long duration = System.currentTimeMillis() - start;
         meterRegistry.timer("event.queue.add.time", "eventId", String.valueOf(eventId))
                 .record(Duration.ofMillis(duration));

@@ -1,0 +1,34 @@
+services:
+  ngrinder-agent-3:
+    image: ngrinder/agent
+    container_name: ngrinder-agent-3
+    platform: linux/amd64
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      JAVA_OPTS: "-Xms256m -Xmx768m"
+      #CONTROLLER_IP: ngrinder-controller
+    entrypoint: [ "/bin/sh", "/scripts/run.sh", "10.0.10.12:16001" ]
+    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: '1.5'
+
+  ngrinder-agent-4:
+    image: ngrinder/agent
+    container_name: ngrinder-agent-4
+    platform: linux/amd64
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      JAVA_OPTS: "-Xms256m -Xmx768m"
+      #CONTROLLER_IP: ngrinder-controller
+    entrypoint: [ "/bin/sh", "/scripts/run.sh", "10.0.10.12:16001" ]
+    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: '1.5'

@@ -7,6 +7,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,10 +20,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
+@Profile("redis")
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AsyncSaveProcessor {
+public class RedisSaveProcessor implements SaveProcessor {
 
     private final OneHundredEventRepository participantRepository;
     private final EventCounter eventCounter;
@@ -36,6 +38,7 @@ public class AsyncSaveProcessor {
         meterRegistry.gauge("event.save.queue.size", saveQueue, BlockingQueue::size);
     }
 
+    @Override
     public void enqueue(OneHundredEventParticipant participant) {
         if (!saveQueue.offer(participant)) {
             log.warn("[저장 큐 초과] 큐가 가득 찼습니다. 저장 실패 - eventId={}, memberId={}",

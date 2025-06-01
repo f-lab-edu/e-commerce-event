@@ -30,7 +30,8 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, EventMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.setConcurrency(3);
+        factory.setConcurrency(8);
+        factory.setBatchListener(true);
         factory.getContainerProperties().setPollTimeout(3000);
         return factory;
     }
@@ -49,6 +50,7 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
 
         return props;
     }

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +39,8 @@ public class OneHundredEventPolicy extends EventPolicy {
 
     @Override
     @Transactional
-    public void applyEvent(Long eventId, Long memberId) {
+    public OneHundredEventParticipant applyEvent(Long eventId, Long memberId) {
+        meterRegistry.counter("event.policy.apply.count", "eventId", String.valueOf(eventId)).increment();
         long start = System.currentTimeMillis();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
@@ -62,27 +64,38 @@ public class OneHundredEventPolicy extends EventPolicy {
                 .expiredAt(LocalDateTime.now().plusMinutes(5))
                 .build();
 
-        try {
-            if ("kafka".equals(consumerType)) {
-                long saveStart = System.currentTimeMillis();
-                oneHundredEventRepository.save(participant);
-                long saveTime = System.currentTimeMillis() - saveStart;
-                meterRegistry.counter("event.save.success", "eventId", String.valueOf(eventId)).increment();
-                meterRegistry.timer("event.save.time", "eventId", String.valueOf(eventId))
-                        .record(Duration.ofMillis(saveTime));
-            } else {
-                saveProcessor.enqueue(participant);
-            }
-        } catch (Exception e) {
-            eventCounter.decrease(eventId);
-//            duplicateChecker.remove(eventId, memberId);
-         //   String dupKey = "dup:one_hundred_event:" + eventId + ":" + memberId;
-          //  redisTemplate.delete(dupKey);
-            throw e;
-        } finally {
-            long duration = System.currentTimeMillis() - start;
-            meterRegistry.timer("event.policy.apply.time", "eventId", String.valueOf(eventId))
-                    .record(Duration.ofMillis(duration));
-        }
+        long duration = System.currentTimeMillis() - start;
+        meterRegistry.timer("event.policy.apply.time", "eventId", String.valueOf(eventId))
+                .record(Duration.ofMillis(duration));
+
+        return participant;  // 저장은 하지 않는다
+
+//        try {
+//            if ("kafka".equals(consumerType)) {
+//                long saveStart = System.currentTimeMillis();
+//                oneHundredEventRepository.save(participant);
+//                long saveTime = System.currentTimeMillis() - saveStart;
+//                meterRegistry.counter("event.save.success", "eventId", String.valueOf(eventId)).increment();
+//                meterRegistry.timer("event.save.time", "eventId", String.valueOf(eventId))
+//                        .record(Duration.ofMillis(saveTime));
+//            } else {
+//                saveProcessor.enqueue(participant);
+//            }
+//        } catch (Exception e) {
+//            eventCounter.decrease(eventId);
+////            duplicateChecker.remove(eventId, memberId);
+//         //   String dupKey = "dup:one_hundred_event:" + eventId + ":" + memberId;
+//          //  redisTemplate.delete(dupKey);
+//            throw e;
+//        } finally {
+//            long duration = System.currentTimeMillis() - start;
+//            meterRegistry.timer("event.policy.apply.time", "eventId", String.valueOf(eventId))
+//                    .record(Duration.ofMillis(duration));
+//        }
+    }
+
+    @Transactional
+    public void saveAll(List<OneHundredEventParticipant> participants) {
+        oneHundredEventRepository.saveAll(participants);
     }
 }

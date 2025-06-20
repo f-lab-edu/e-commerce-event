@@ -1,19 +1,23 @@
 services:
-  app:
+  app1:
     build:
       context: .
-    container_name: e-commerce-mall
+    container_name: e-commerce-mall-1
     restart: always
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: docker-dev
+      SPRING_PROFILES_ACTIVE: dev,kafka
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis_server
+      SPRING_REDIS_PORT: 6379
       TZ: Asia/Seoul
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - ecommerce_network
@@ -21,6 +25,72 @@ services:
       resources:
         limits:
           cpus: '4.0'
+
+  app2:
+    build:
+      context: .
+    container_name: e-commerce-mall-2
+    ports:
+      - "8084:8080"  # 포트 겹치지 않게 변경
+    environment:
+      SPRING_PROFILES_ACTIVE: dev,kafka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis_server
+      SPRING_REDIS_PORT: 6379
+      TZ: Asia/Seoul
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce_network
+
+  app3:
+    build:
+      context: .
+    container_name: e-commerce-mall-3
+    ports:
+      - "8086:8080"  # 포트 겹치지 않게 변경
+    environment:
+      SPRING_PROFILES_ACTIVE: dev,redis
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis_server
+      SPRING_REDIS_PORT: 6379
+      TZ: Asia/Seoul
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce_network
+
+  app4:
+    build:
+      context: .
+    container_name: e-commerce-mall-4
+    ports:
+      - "8088:8080"  # 포트 겹치지 않게 변경
+    environment:
+      SPRING_PROFILES_ACTIVE: dev,redis
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_db:3306/ecommerce?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis_server
+      SPRING_REDIS_PORT: 6379
+      TZ: Asia/Seoul
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce_network
 
   db:
     image: mysql:8.0
@@ -78,7 +148,7 @@ services:
     platform: linux/amd64
     restart: always
     ports:
-      - "8081:80"
+      - "8081:80"   # 외부에서는 8081로 접속
       - "16001:16001"
       - "12000-12100:12000-12100"
     environment:
@@ -138,11 +208,68 @@ services:
     networks:
       - ecommerce_network
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - ecommerce_network
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    restart: always
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_MESSAGE_MAX_BYTES: 20000000
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 20000000
+    depends_on:
+      - zookeeper
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - ecommerce_network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8085:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - DYNAMIC_CONFIG_ENABLED=true
+    depends_on:
+      - kafka
+    networks:
+      - ecommerce_network
+
 volumes:
   db_data:
   redis_data:
   ngrinder_data:
   grafana_data:
+  kafka_data:
+  zookeeper_data:
+  zookeeper_log:
 
 networks:
   ecommerce_network:

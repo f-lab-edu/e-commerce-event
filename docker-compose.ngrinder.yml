@@ -21,102 +21,43 @@ services:
       - ngrinder_data_prod:/opt/ngrinder-controller
 
 
-#  ngrinder-agent-1:
-#    image: ngrinder/agent
-#    container_name: ngrinder-agent-1
-#    platform: linux/amd64
-#    restart: always
-#    environment:
-#      TZ: Asia/Seoul
-#      JAVA_OPTS: "-Xms256m -Xmx768m"
-#      #CONTROLLER_IP: ngrinder-controller
-#    depends_on:
-#      - ngrinder-controller
-#    entrypoint: ["/bin/sh", "/scripts/run.sh", "ngrinder-controller"]
-#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    networks:
-#      - ecommerce_network
-#    volumes:
-#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
-#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 1g
-#          cpus: '1.5'
-#
-#  ngrinder-agent-2:
-#    image: ngrinder/agent
-#    container_name: ngrinder-agent-2
-#    platform: linux/amd64
-#    restart: always
-#    environment:
-#      TZ: Asia/Seoul
-#      JAVA_OPTS: "-Xms256m -Xmx768m"
-#      #CONTROLLER_IP: ngrinder-controller
-#    depends_on:
-#      - ngrinder-controller
-#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    networks:
-#      - ecommerce_network
-#    volumes:
-#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
-#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 1g
-#          cpus: '1.5'
-#
-#  ngrinder-agent-3:
-#    image: ngrinder/agent
-#    container_name: ngrinder-agent-3
-#    platform: linux/amd64
-#    restart: always
-#    environment:
-#      TZ: Asia/Seoul
-#      JAVA_OPTS: "-Xms256m -Xmx768m"
-#      #CONTROLLER_IP: ngrinder-controller
-#    depends_on:
-#      - ngrinder-controller
-#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    networks:
-#      - ecommerce_network
-#    volumes:
-#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
-#      - ngrinder_data:/opt/ngrinder-controller
-#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 1g
-#          cpus: '1.5'
-#
-#  ngrinder-agent-4:
-#    image: ngrinder/agent
-#    container_name: ngrinder-agent-4
-#    platform: linux/amd64
-#    restart: always
-#    environment:
-#      TZ: Asia/Seoul
-#      JAVA_OPTS: "-Xms256m -Xmx768m"
-#      #CONTROLLER_IP: ngrinder-controller
-#    depends_on:
-#      - ngrinder-controller
-#    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
-#    networks:
-#      - ecommerce_network
-#    volumes:
-#      - /Users/minjeong/study/python:/opt/ngrinder/sessions:ro
-#      #- ./ngrinder-agent-logs:/opt/ngrinder/logs
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 1g
-#          cpus: '1.5'
+  ngrinder-agent-1:
+    image: ngrinder/agent
+    container_name: ngrinder-agent-1
+    platform: linux/amd64
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      JAVA_OPTS: "-Xms256m -Xmx768m"
+      #CONTROLLER_IP: ngrinder-controller
+    depends_on:
+      - ngrinder-controller
+    entrypoint: ["/bin/sh", "/scripts/run.sh", "ngrinder-controller"]
+    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: '1.5'
+
+  ngrinder-agent-2:
+    image: ngrinder/agent
+    container_name: ngrinder-agent-2
+    platform: linux/amd64
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      JAVA_OPTS: "-Xms256m -Xmx768m"
+      #CONTROLLER_IP: ngrinder-controller
+    depends_on:
+      - ngrinder-controller
+    entrypoint: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+    #command: [ "/bin/sh", "/scripts/run.sh", "ngrinder-controller" ]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: '1.5'
 
 volumes:
   ngrinder_data_prod:

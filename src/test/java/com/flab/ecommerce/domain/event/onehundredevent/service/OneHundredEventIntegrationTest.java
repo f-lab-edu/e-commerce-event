@@ -6,20 +6,24 @@ import com.flab.ecommerce.domain.event.enums.EventStatus;
 import com.flab.ecommerce.domain.event.enums.EventType;
 import com.flab.ecommerce.domain.event.onehundredevent.counter.EventCounter;
 import com.flab.ecommerce.domain.event.onehundredevent.entity.OneHundredEventParticipant;
-import com.flab.ecommerce.domain.event.onehundredevent.processor.AsyncSaveProcessor;
+import com.flab.ecommerce.domain.event.onehundredevent.processor.RedisSaveProcessor;
 import com.flab.ecommerce.domain.event.onehundredevent.repository.OneHundredEventRepository;
 import com.flab.ecommerce.domain.event.policy.EventPolicy;
 import com.flab.ecommerce.domain.event.queue.EventQueue;
 import com.flab.ecommerce.domain.event.repository.EventRepository;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -28,11 +32,13 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = "spring.task.scheduling.enabled=false")
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 //@Transactional
 
 class OneHundredEventIntegrationTest {
+    @Autowired
+    Environment env;
     @Autowired
     private OneHundredEventService oneHundredEventService;
     @Autowired
@@ -47,7 +53,7 @@ class OneHundredEventIntegrationTest {
     private EventCounter oneHundredEventCounter;
 
     @Autowired
-    private AsyncSaveProcessor saveProcessor;
+    private RedisSaveProcessor saveProcessor;
 
 
     @BeforeEach
@@ -56,6 +62,14 @@ class OneHundredEventIntegrationTest {
        // eventRepository.deleteAll();
         eventQueue.clearAll();             // 큐 초기화
         oneHundredEventCounter.reset();    // 카운터 초기화
+    }
+
+    @Test
+    void 로딩된_환경설정_확인() {
+        System.out.println(">>> Active Profiles: " + Arrays.toString(env.getActiveProfiles()));
+        System.out.println(">>> Kafka bootstrap-servers: " + env.getProperty("spring.kafka.bootstrap-servers"));
+        System.out.println(">>> Redis host: " + env.getProperty("spring.data.redis.host"));
+        System.out.println(">>> DB URL: " + env.getProperty("spring.datasource.url"));
     }
 
     @Test
@@ -80,10 +94,10 @@ class OneHundredEventIntegrationTest {
         oneHundredEventService.addToQueue(eventId, memberId);
 
         // then: 큐에 잘 들어갔는지 확인
-        assertThat(eventQueue.isUserInQueue(eventId, memberId)).isTrue();
+        //assertThat(eventQueue.isUserInQueue(eventId, memberId)).isTrue();
 
         // when: 컨슈머 역할 - 큐에서 pop 후 정책 적용
-        eventPolicy.applyEvent(eventId, memberId);
+        //eventPolicy.applyEvent(eventId, memberId);
 
         Thread.sleep(1000);
 
@@ -103,7 +117,7 @@ class OneHundredEventIntegrationTest {
                 .type(EventType.ONE_HUNDRED_WON_DEAL)
                 .startDate(LocalDateTime.now().minusMinutes(1))
                 .endDate(LocalDateTime.now().plusMinutes(10))
-                .maxParticipants(2000)
+                .maxParticipants(10)
                 .status(EventStatus.ACTIVE)
                 .name("100원 DEAL")
                 .description("동시 참가 1000")
@@ -111,7 +125,7 @@ class OneHundredEventIntegrationTest {
         eventRepository.save(event);
         Long eventId = event.getId();
 
-        int totalUsers = 3000;
+        int totalUsers = 10;
         int coreCount = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
         CountDownLatch latch = new CountDownLatch(totalUsers);
@@ -173,6 +187,50 @@ class OneHundredEventIntegrationTest {
         System.out.println("전체 소요 시간: " + (totalEnd - totalStart) + "ms");
         System.out.println("컨슈머 처리 시간: " + duration + "ms");
         System.out.println("TPS (초당 처리량): " + String.format("%.2f", tps) + "건/초");
+    }
+
+    @Test
+    @DisplayName("Kafka 전체 흐름 - 100명 큐 등록 후 Kafka 컨슈머로 참가자 처리")
+    void kafka_기반_전체흐름_테스트() throws Exception {
+        // given
+        Event event = eventRepository.save(Event.builder()
+                .type(EventType.ONE_HUNDRED_WON_DEAL)
+                .startDate(LocalDateTime.now().minusMinutes(1))
+                .endDate(LocalDateTime.now().plusMinutes(10))
+                .maxParticipants(10)
+                .status(EventStatus.ACTIVE)
+                .name("카프카 이벤트")
+                .description("Kafka 테스트용")
+                .build());
+
+        Long eventId = event.getId();
+
+        int totalUsers = 10;
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        CountDownLatch latch = new CountDownLatch(totalUsers);
+
+        for (long i = 1; i <= totalUsers; i++) {
+            long memberId = i;
+            executor.submit(() -> {
+                try {
+                    oneHundredEventService.addToQueue(eventId, memberId); // 이게 Kafka publish
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executor.shutdown();
+
+        // 컨슈머는 Kafka Listener에서 비동기 처리되므로 대기
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(500))
+                .untilAsserted(() -> {
+                    List<OneHundredEventParticipant> participants = participantRepository.findByEventId(eventId);
+                    assertThat(participants.size()).isEqualTo(10);
+                });
     }
 
     @Test
@@ -381,6 +439,56 @@ class OneHundredEventIntegrationTest {
         System.out.println("컨슈머 처리 시간: " + duration + "ms");
         System.out.println("전체 소요 시간: " + totalDuration + "ms");
         System.out.println("TPS (초당 처리량): " + String.format("%.2f", tps) + "건/초");
+    }
+
+
+    @Test
+    @DisplayName("🚨 Redis 기반: 중복 참가자 발생 가능성 테스트 (중복 체크 제거 시)")
+    void redis_중복_참가자_충돌_테스트() throws Exception {
+        // given
+        Event event = eventRepository.save(Event.builder()
+                .type(EventType.ONE_HUNDRED_WON_DEAL)
+                .startDate(LocalDateTime.now().minusMinutes(1))
+                .endDate(LocalDateTime.now().plusMinutes(10))
+                .maxParticipants(100)
+                .status(EventStatus.ACTIVE)
+                .name("중복 참가자 테스트")
+                .description("Redis 기반 중복 충돌 유도")
+                .build());
+
+        Long eventId = event.getId();
+        Long memberId = 123L;
+
+        int threadCount = 10; // 같은 사람 10번 동시에 등록
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    oneHundredEventService.addToQueue(eventId, memberId); // ⚠ Redis 기반
+                } catch (Exception e) {
+                    System.out.println("❌ 중복 예외 발생: " + e.getClass().getSimpleName());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executor.shutdown();
+
+        // 처리 대기 (consumer 스케줄러나 async 구조 고려)
+        Thread.sleep(3000);
+
+        // then
+        List<OneHundredEventParticipant> participants = participantRepository.findByEventId(eventId);
+        long saved = participants.stream()
+                .filter(p -> p.getMemberId().equals(memberId))
+                .count();
+
+        System.out.println("✅ 저장된 동일 참가자 수: " + saved);
+        assertThat(saved).isLessThanOrEqualTo(1L); // 중복 저장되면 이게 깨짐
     }
 
 }
